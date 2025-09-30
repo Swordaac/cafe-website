@@ -2,21 +2,23 @@ import { Router } from 'express';
 import { MenuItem } from '../models/MenuItem.js';
 import { authSupabase } from '../middlewares/authSupabase.js';
 import { resolveTenant } from '../middlewares/tenant.js';
+import { ensureTenantExists, loadMembership, requireMembership } from '../middlewares/membership.js';
+import { authorize } from '../middlewares/authorize.js';
 
 export const router = Router();
 
 // Apply auth and tenant resolution
-router.use(authSupabase, resolveTenant);
+router.use(authSupabase, resolveTenant, ensureTenantExists, loadMembership);
 
 // List menu items for current tenant
-router.get('/', async (req, res) => {
+router.get('/', requireMembership, async (req, res) => {
   const tenantId = req.tenant!.id;
   const items = await MenuItem.find({ tenantId }).lean();
   res.json({ data: items });
 });
 
 // Create a menu item for current tenant
-router.post('/', async (req, res) => {
+router.post('/', authorize(['editor', 'admin']), async (req, res) => {
   const tenantId = req.tenant!.id;
   const { name, description, priceCents, category, imageUrl } = req.body ?? {};
   const created = await MenuItem.create({ tenantId, name, description, priceCents, category, imageUrl });
@@ -24,7 +26,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update a menu item (only within tenant)
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', authorize(['editor', 'admin']), async (req, res) => {
   const tenantId = req.tenant!.id;
   const { id } = req.params;
   const update = req.body ?? {};
@@ -34,7 +36,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 // Delete a menu item (only within tenant)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authorize('admin'), async (req, res) => {
   const tenantId = req.tenant!.id;
   const { id } = req.params;
   const deleted = await MenuItem.findOneAndDelete({ _id: id, tenantId });
