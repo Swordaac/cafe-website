@@ -29,3 +29,5 @@ menuItemSchema.index({ tenantId: 1, name: 1 }, { unique: false });
 export const MenuItem = model<MenuItemDocument>('MenuItem', menuItemSchema);
 
 
+
+

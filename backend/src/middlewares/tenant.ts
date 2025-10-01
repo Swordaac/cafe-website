@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
+import type {} from '../types/express.js';
 import { env } from '../config/env.js';
 
 function fromHeader(req: Request): string | undefined {
@@ -48,7 +49,24 @@ export function resolveTenant(req: Request, _res: Response, next: NextFunction) 
     return next(new Error('Tenant not resolved'));
   }
 
-  req.tenant = { id: tenantId };
+  (req as any).tenant = { id: tenantId };
+  return next();
+}
+
+export function tenantFromParam(req: Request, _res: Response, next: NextFunction) {
+  const paramTenantId = (req.params as any).tenantId;
+  if (paramTenantId) {
+    (req as any).tenant = { id: String(paramTenantId) };
+  }
+  return next();
+}
+
+export function tenantParamMatchesJwt(req: Request, res: Response, next: NextFunction) {
+  const paramTenantId = (req.params as any).tenantId;
+  const jwtTenantId = (req as any).auth?.tenantId;
+  if (paramTenantId && jwtTenantId && paramTenantId !== jwtTenantId) {
+    return res.status(403).json({ error: 'Tenant mismatch' });
+  }
   return next();
 }
 
