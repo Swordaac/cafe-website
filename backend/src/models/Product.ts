@@ -10,6 +10,12 @@ export interface ProductDocument {
   description?: string;
   priceCents: number;
   imageUrl?: string;
+  imagePublicId?: string;
+  imageMetadata?: {
+    width: number;
+    height: number;
+    format: string;
+  };
   availabilityStatus: AvailabilityStatus;
   createdAt: Date;
   updatedAt: Date;
@@ -23,6 +29,12 @@ const productSchema = new Schema<ProductDocument>(
     description: { type: String },
     priceCents: { type: Number, required: true, min: 0 },
     imageUrl: { type: String },
+    imagePublicId: { type: String },
+    imageMetadata: {
+      width: { type: Number },
+      height: { type: Number },
+      format: { type: String }
+    },
     availabilityStatus: { type: String, enum: ['available', 'unavailable', 'archived'], default: 'available' },
   },
   { timestamps: true, versionKey: false }

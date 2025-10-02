@@ -22,6 +22,11 @@ export const env = {
   tenantStrategy: getEnv('TENANT_STRATEGY', 'header') as 'header' | 'subdomain' | 'path',
   tenantHeader: getEnv('TENANT_HEADER', 'x-tenant-id').toLowerCase(),
   baseDomain: getEnv('BASE_DOMAIN', 'localhost'),
+  cloudinary: {
+    cloudName: getEnv('CLOUDINARY_CLOUD_NAME'),
+    apiKey: getEnv('CLOUDINARY_API_KEY'),
+    apiSecret: getEnv('CLOUDINARY_API_SECRET'),
+  },
 };
 
 

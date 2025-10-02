@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase'
+import { ImageUploader } from './ImageUploader'
 
 type Category = {
   _id: string
@@ -48,7 +50,7 @@ export default function TenantCrudTest() {
   const [prodDesc, setProdDesc] = useState('')
   const [prodPrice, setProdPrice] = useState<number | ''>('')
   const [prodCategoryId, setProdCategoryId] = useState('')
-  const [prodImage, setProdImage] = useState('')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [prodStatus, setProdStatus] = useState<'available' | 'unavailable' | 'archived'>('available')
 
   const [loading, setLoading] = useState(false)
@@ -149,49 +151,79 @@ export default function TenantCrudTest() {
     if (!token) return setError('Sign in required')
     try {
       setError(null)
+
+      // Validate required fields
+      if (!prodName || prodPrice === '') {
+        throw new Error('Name and price are required');
+      }
+
+      // Create FormData with required and optional fields
+      const formData = new FormData()
+      formData.append('name', prodName.trim())
+      formData.append('priceCents', String(Number(prodPrice)))
+      if (prodDesc) formData.append('description', prodDesc.trim())
+      if (prodCategoryId) formData.append('categoryId', prodCategoryId)
+      formData.append('availabilityStatus', prodStatus)
+      if (selectedFile) formData.append('image', selectedFile)
+
       await fetchJson(`${apiBase}/tenants/${tenantId}/products`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          categoryId: prodCategoryId || undefined,
-          name: prodName,
-          description: prodDesc || undefined,
-          priceCents: prodPrice === '' ? undefined : Number(prodPrice),
-          imageUrl: prodImage || undefined,
-          availabilityStatus: prodStatus,
-        }),
+        body: formData,
       })
+
       setProdName('')
       setProdDesc('')
       setProdPrice('')
       setProdCategoryId('')
-      setProdImage('')
+      setSelectedFile(null)
       setProdStatus('available')
       await loadData()
     } catch (e: any) {
       setError(e?.message || 'Failed to create product')
+      throw e // Propagate error to ImageUploader
     }
   }
 
-  const updateProduct = async (id: string, fields: Partial<Omit<Product, '_id' | 'tenantId'>>) => {
+  const updateProduct = async (id: string, fields: Partial<Omit<Product, '_id' | 'tenantId'>>, imageFile?: File) => {
     const token = await getAccessToken()
     if (!token) return setError('Sign in required')
     try {
       setError(null)
-      await fetchJson(`${apiBase}/tenants/${tenantId}/products/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(fields),
-      })
+
+      if (imageFile) {
+        // If updating with image, use FormData
+        const formData = new FormData()
+        Object.entries(fields).forEach(([key, value]) => {
+          if (value !== undefined) formData.append(key, String(value))
+        })
+        formData.append('image', imageFile)
+
+        await fetchJson(`${apiBase}/tenants/${tenantId}/products/${id}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        })
+      } else {
+        // Regular JSON update without image
+        await fetchJson(`${apiBase}/tenants/${tenantId}/products/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(fields),
+        })
+      }
+
       await loadData()
     } catch (e: any) {
       setError(e?.message || 'Failed to update product')
+      throw e // Propagate error to ImageUploader
     }
   }
 
@@ -270,9 +302,12 @@ export default function TenantCrudTest() {
             <label className="text-sm text-gray-600">Price (cents)</label>
             <input className="border rounded px-2 py-1" type="number" value={prodPrice} onChange={(e) => setProdPrice(e.target.value === '' ? '' : Number(e.target.value))} />
           </div>
-          <div className="flex flex-col">
-            <label className="text-sm text-gray-600">Image URL</label>
-            <input className="border rounded px-2 py-1" value={prodImage} onChange={(e) => setProdImage(e.target.value)} />
+          <div className="flex flex-col col-span-2">
+            <label className="text-sm text-gray-600">Image</label>
+            <ImageUploader
+              onFileSelect={setSelectedFile}
+              className="mt-1"
+            />
           </div>
           <div className="flex flex-col">
             <label className="text-sm text-gray-600">Category</label>
@@ -293,22 +328,47 @@ export default function TenantCrudTest() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="px-3 py-2 rounded bg-teal-600 text-white" onClick={createProduct} disabled={!prodName || prodPrice === ''}>Create</button>
+          <button className="px-3 py-2 rounded bg-teal-600 text-white" onClick={() => createProduct()} disabled={!prodName || prodPrice === ''}>Create</button>
           <button className="px-3 py-2 rounded border" onClick={loadData}>Refresh</button>
         </div>
 
         <ul className="divide-y rounded border">
           {products.map((p) => (
             <li key={p._id} className="p-3 flex items-center justify-between gap-3">
-              <div className="flex-1">
-                <div className="font-medium">{p.name}</div>
-                <div className="text-xs text-gray-600">${'{'}(p.priceCents/100).toFixed(2){'}'} · {p.availabilityStatus}</div>
-                <div className="text-xs text-gray-600">category: {p.categoryId || '(none)'}</div>
+              <div className="flex gap-4">
+                {p.imageUrl && (
+                  <div className="relative h-16 w-16 rounded overflow-hidden flex-shrink-0">
+                    <Image
+                      src={p.imageUrl}
+                      alt={p.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <div className="font-medium">{p.name}</div>
+                  <div className="text-xs text-gray-600">${(p.priceCents/100).toFixed(2)} · {p.availabilityStatus}</div>
+                  <div className="text-xs text-gray-600">category: {p.categoryId || '(none)'}</div>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button className="px-2 py-1 rounded border" onClick={() => updateProduct(p._id, { name: `${p.name} *` })}>Rename</button>
-                <button className="px-2 py-1 rounded border" onClick={() => updateProduct(p._id, { availabilityStatus: p.availabilityStatus === 'available' ? 'unavailable' : 'available' })}>Toggle</button>
-                <button className="px-2 py-1 rounded bg-red-600 text-white" onClick={() => deleteProduct(p._id)}>Delete</button>
+              <div className="flex items-start gap-2">
+                <ImageUploader
+                  onFileSelect={(file) => {
+                    if (file) {
+                      const formData = new FormData();
+                      formData.append('image', file);
+                      updateProduct(p._id, {}, file);
+                    }
+                  }}
+                  currentImageUrl={p.imageUrl}
+                  className="w-32"
+                />
+                <div className="flex flex-col gap-2">
+                  <button className="px-2 py-1 rounded border" onClick={() => updateProduct(p._id, { name: `${p.name} *` })}>Rename</button>
+                  <button className="px-2 py-1 rounded border" onClick={() => updateProduct(p._id, { availabilityStatus: p.availabilityStatus === 'available' ? 'unavailable' : 'available' })}>Toggle</button>
+                  <button className="px-2 py-1 rounded bg-red-600 text-white" onClick={() => deleteProduct(p._id)}>Delete</button>
+                </div>
               </div>
             </li>
           ))}
