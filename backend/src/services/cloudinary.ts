@@ -143,7 +143,7 @@ class CloudinaryService {
       console.log('Ping result:', result);
       
       // Try to get account details
-      const accountResult = await cloudinary.api.account_info();
+      const accountResult = await cloudinary.api.usage();
       console.log('Account info:', JSON.stringify(accountResult, null, 2));
       return accountResult;
     } catch (error) {

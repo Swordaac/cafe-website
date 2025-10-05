@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import '../types/express.js';
 import crypto from 'crypto';
 import { Tenant } from '../models/Tenant.js';
 import { Membership } from '../models/Membership.js';

@@ -21,7 +21,7 @@ const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', '*'];
 console.log('CORS allowed origins:', allowedOrigins);
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
       console.log('CORS check for origin:', origin);
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {

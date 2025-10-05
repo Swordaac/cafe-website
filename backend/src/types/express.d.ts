@@ -1,10 +1,12 @@
 import 'express';
 
-declare module 'express-serve-static-core' {
-  interface Request {
-    tenant?: { id: string };
-    auth?: { userId: string; email?: string; role?: string; tenantId?: string };
-    membership?: { role: 'admin' | 'editor' | 'viewer' } | null;
+declare global {
+  namespace Express {
+    interface Request {
+      tenant?: { id: string };
+      auth?: { userId: string; email?: string; role?: string; tenantId?: string };
+      membership?: { role: 'admin' | 'editor' | 'viewer' } | null;
+    }
   }
 }
 
