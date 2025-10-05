@@ -18,7 +18,7 @@ export const env = {
   port: Number(getEnv('PORT', '4000')),
   mongoUri: getEnv('MONGODB_URI'),
   supabaseJwtSecret: getEnv('SUPABASE_JWT_SECRET'),
-  allowedOrigins: getList('ALLOWED_ORIGINS', ['http://localhost:3000']),
+  allowedOrigins: getList('ALLOWED_ORIGINS', ['http://localhost:3000', 'http://localhost:3001', '*']),
   tenantStrategy: getEnv('TENANT_STRATEGY', 'header') as 'header' | 'subdomain' | 'path',
   tenantHeader: getEnv('TENANT_HEADER', 'x-tenant-id').toLowerCase(),
   baseDomain: getEnv('BASE_DOMAIN', 'localhost'),

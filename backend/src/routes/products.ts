@@ -92,13 +92,23 @@ router.post('/',
     }
 });
 
-// List products (optionally by category)
+// List products (optionally by category and search)
 router.get('/', async (req, res, next) => {
   try {
     const tenantId = (req as any).tenant!.id;
-    const { categoryId } = req.query as { categoryId?: string };
+    const { categoryId, search } = req.query as { categoryId?: string; search?: string };
     const filter: any = { tenantId };
+    
     if (categoryId) filter.categoryId = categoryId;
+    
+    // Add search functionality
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
     const products = await Product.find(filter).lean();
     res.json({ data: products });
   } catch (error) {

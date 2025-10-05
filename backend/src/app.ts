@@ -15,15 +15,19 @@ app.set('trust proxy', true);
 app.use(helmet());
 app.use(compression());
 
-// CORS
-const allowedOrigins = env.allowedOrigins;
+// CORS - Temporary hardcoded for development
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', '*'];
+console.log('CORS allowed origins:', allowedOrigins);
 app.use(
   cors({
     origin: (origin, callback) => {
+      console.log('CORS check for origin:', origin);
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        console.log('Origin allowed:', origin);
         return callback(null, true);
       }
+      console.log('Origin not allowed:', origin, 'Allowed origins:', allowedOrigins);
       return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
@@ -47,6 +51,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 export default app;
+
 
 
 
