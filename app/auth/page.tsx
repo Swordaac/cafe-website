@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Mail, Lock, User, Heart, Star, Coffee, ArrowRight, CheckCircle } from 'lucide-react'
+import { Mail, Lock, User, Heart, Star, Coffee, ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function AuthPage() {
@@ -13,8 +13,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
-  const [isSignUp, setIsSignUp] = useState(false)
-  const [showSuccess, setShowSuccess] = useState(false)
+  const [isSignUp, setIsSignUp] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -41,7 +40,7 @@ export default function AuthPage() {
         setMessage(`Error: ${error.message}`)
       } else {
         setMessage('Signed in successfully!')
-        getToken()
+        // User will be redirected automatically by the useEffect hook
       }
     } catch (error) {
       setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -62,8 +61,8 @@ export default function AuthPage() {
       if (error) {
         setMessage(`Error: ${error.message}`)
       } else {
-        setShowSuccess(true)
-        setMessage('')
+        // Redirect to success page after successful registration
+        router.push('/success')
       }
     } catch (error) {
       setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -103,47 +102,6 @@ export default function AuthPage() {
     </div>
   )
 
-  // Success page after registration
-  if (showSuccess) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
-        <div className="flex items-center justify-center min-h-screen px-6">
-          <Card className="max-w-md w-full p-8 text-center shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-12 h-12 text-green-600" />
-            </div>
-            
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">
-              Welcome to Bouchees! 🎉
-            </h1>
-            
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              Your account has been created successfully! We've sent a verification link to your email. 
-              Please check your inbox and click the link to verify your account.
-            </p>
-            
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-orange-800">
-                <strong>Next steps:</strong>
-              </p>
-              <ul className="text-sm text-orange-700 mt-2 space-y-1">
-                <li>• Check your email for verification link</li>
-                <li>• Click the link to activate your account</li>
-                <li>• Start exploring our delicious menu!</li>
-              </ul>
-            </div>
-            
-            <Button 
-              onClick={() => setShowSuccess(false)}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-xl font-bold"
-            >
-              Back to Login
-            </Button>
-          </Card>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100">
