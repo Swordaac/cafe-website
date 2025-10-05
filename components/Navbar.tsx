@@ -1,21 +1,36 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { useAuth } from '@/contexts/auth'
 import { createClient } from '@/lib/supabase'
 import { Search, Menu, X, Facebook, Instagram, Linkedin, Youtube, Twitter } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+
+function SearchComponent() {
+  const [searchValue, setSearchValue] = useState('')
+  
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        placeholder="Search..."
+        value={searchValue}
+        onChange={(e) => setSearchValue(e.target.value)}
+        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+    </div>
+  )
+}
 
 export function Navbar() {
   const { user, loading } = useAuth()
   const supabase = createClient()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [searchValue, setSearchValue] = useState('')
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -36,11 +51,6 @@ export function Navbar() {
     return `${baseClasses} ${isActive(path) ? activeClasses : inactiveClasses}`
   }
 
-  // Update search input when URL search params change
-  useEffect(() => {
-    const searchTerm = searchParams.get('search')
-    setSearchValue(searchTerm || '')
-  }, [searchParams])
 
   return (
     <>
@@ -116,37 +126,9 @@ export function Navbar() {
             {/* Search and Actions */}
             <div className="flex items-center space-x-4">
               {/* Search Bar */}
-              <div className="relative">
-                <div className="flex items-center">
-                  <input
-                    type="text"
-                    placeholder="Search menu items..."
-                    value={searchValue}
-                    onChange={(e) => setSearchValue(e.target.value)}
-                    className="w-64 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        const searchTerm = searchValue.trim();
-                        if (searchTerm) {
-                          // Redirect to main page with search query
-                          window.location.href = `/?search=${encodeURIComponent(searchTerm)}`;
-                        }
-                      }
-                    }}
-                  />
-                  <button 
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-600"
-                    onClick={() => {
-                      const searchTerm = searchValue.trim();
-                      if (searchTerm) {
-                        window.location.href = `/?search=${encodeURIComponent(searchTerm)}`;
-                      }
-                    }}
-                  >
-                    <Search className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
+              <Suspense fallback={<div className="w-64 h-10 bg-gray-200 rounded-full animate-pulse"></div>}>
+                <SearchComponent />
+              </Suspense>
 
               {/* User Actions */}
               <div className="flex items-center space-x-2">

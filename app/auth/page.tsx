@@ -20,27 +20,36 @@ export default function AuthPage() {
   }, [user])
 
   const getToken = async () => {
-    const { data } = await supabase.auth.getSession()
-    const token = data.session?.access_token || null
-    console.log('Token:', token)
-    console.log('Session:', data.session)
-    setToken(token)
+    try {
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token || null
+      console.log('Token:', token)
+      console.log('Session:', data.session)
+      setToken(token)
+    } catch (error) {
+      console.error('Error getting token:', error)
+      setToken(null)
+    }
   }
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setMessage('')
     
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    
-    if (error) {
-      setMessage(`Error: ${error.message}`)
-    } else {
-      setMessage('Signed in successfully!')
-      getToken()
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      
+      if (error) {
+        setMessage(`Error: ${error.message}`)
+      } else {
+        setMessage('Signed in successfully!')
+        getToken()
+      }
+    } catch (error) {
+      setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -48,22 +57,31 @@ export default function AuthPage() {
     e.preventDefault()
     setMessage('')
     
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    })
-    
-    if (error) {
-      setMessage(`Error: ${error.message}`)
-    } else {
-      setMessage('Check your email for verification link!')
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      })
+      
+      if (error) {
+        setMessage(`Error: ${error.message}`)
+      } else {
+        setMessage('Check your email for verification link!')
+      }
+    } catch (error) {
+      setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    setToken(null)
-    setMessage('Signed out')
+    try {
+      await supabase.auth.signOut()
+      setToken(null)
+      setMessage('Signed out')
+    } catch (error) {
+      console.error('Error signing out:', error)
+      setMessage('Error signing out')
+    }
   }
 
   if (loading) return <div>Loading...</div>
