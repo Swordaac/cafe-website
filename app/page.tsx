@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/ProductCard"
 import { Navbar } from "@/components/Navbar"
@@ -39,7 +40,6 @@ interface HomeProps {
 
 export default function Home({ searchParams }: HomeProps) {
   const searchTerm = searchParams.search;
-  const [waitlistEmail, setWaitlistEmail] = useState('')
   const [waitlistMessage, setWaitlistMessage] = useState('')
   const [isWaitlistLoading, setIsWaitlistLoading] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
@@ -64,8 +64,8 @@ export default function Home({ searchParams }: HomeProps) {
     fetchData()
   }, [searchTerm])
 
-  const joinWaitlist = async () => {
-    if (!waitlistEmail) {
+  const joinWaitlist = async (email: string) => {
+    if (!email) {
       setWaitlistMessage('Please enter your email to join the waitlist')
       return
     }
@@ -77,7 +77,6 @@ export default function Home({ searchParams }: HomeProps) {
       // For now, we'll just show a success message
       // In a real app, you'd send this to your backend
       setWaitlistMessage('🎉 You\'ve joined our waitlist! We\'ll notify you when we launch.')
-      setWaitlistEmail('')
       setTimeout(() => setWaitlistMessage(''), 5000)
     } catch (error) {
       setWaitlistMessage('Error joining waitlist. Please try again.')
@@ -121,21 +120,10 @@ export default function Home({ searchParams }: HomeProps) {
             
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <a href="/auth" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-xl">
+              <Link href="/auth" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-xl">
                 SIGN UP AS CUSTOMER
-              </a>
-              <button 
-                onClick={() => {
-                  const email = prompt('Enter your email to join our waitlist:')
-                  if (email) {
-                    setWaitlistEmail(email)
-                    joinWaitlist()
-                  }
-                }}
-                className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-orange-600 transition-all duration-300 transform hover:scale-105"
-              >
-                JOIN WAITLIST
-              </button>
+              </Link>
+
             </div>
           </div>
         </div>
@@ -229,16 +217,15 @@ export default function Home({ searchParams }: HomeProps) {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <a href="/auth" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
+            <Link href="/auth" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
               <Smartphone className="w-5 h-5" />
               SIGN UP AS CUSTOMER
-            </a>
+            </Link>
             <button 
               onClick={() => {
                 const email = prompt('Enter your email to join our waitlist:')
                 if (email) {
-                  setWaitlistEmail(email)
-                  joinWaitlist()
+                  joinWaitlist(email)
                 }
               }}
               className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-orange-600 transition-all duration-300 transform hover:scale-105 flex items-center gap-2"
@@ -412,16 +399,15 @@ export default function Home({ searchParams }: HomeProps) {
             their go-to spot for great food and great vibes.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <a href="/auth" className="bg-white text-orange-600 px-10 py-4 rounded-full font-bold text-xl hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
+            <Link href="/auth" className="bg-white text-orange-600 px-10 py-4 rounded-full font-bold text-xl hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
               <ShoppingCart className="w-6 h-6" />
               SIGN UP AS CUSTOMER
-            </a>
+            </Link>
             <button 
               onClick={() => {
                 const email = prompt('Enter your email to join our waitlist:')
                 if (email) {
-                  setWaitlistEmail(email)
-                  joinWaitlist()
+                  joinWaitlist(email)
                 }
               }}
               className="border-2 border-white text-white px-10 py-4 rounded-full font-bold text-xl hover:bg-white hover:text-orange-600 transition-all duration-300 transform hover:scale-105 flex items-center gap-2"
