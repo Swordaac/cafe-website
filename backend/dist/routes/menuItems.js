@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import '../types/express.js';
 import { MenuItem } from '../models/MenuItem.js';
 import { authSupabase } from '../middlewares/authSupabase.js';
 import { resolveTenant } from '../middlewares/tenant.js';

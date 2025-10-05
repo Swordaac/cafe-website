@@ -1,4 +1,3 @@
-import '../types/express.js';
 import { Tenant } from '../models/Tenant.js';
 import { Membership } from '../models/Membership.js';
 export async function ensureTenantExists(req, res, next) {
