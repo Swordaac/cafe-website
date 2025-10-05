@@ -16,6 +16,7 @@ export async function fetchProducts(tenantId: string, categoryId?: string, searc
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'x-tenant-id': tenantId,
       },
     });
 
@@ -81,6 +82,7 @@ export async function fetchCategories(tenantId: string): Promise<Category[]> {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'x-tenant-id': tenantId,
       },
     });
 
