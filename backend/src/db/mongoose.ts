@@ -8,7 +8,6 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
   mongoose.set('strictQuery', true);
 
   await mongoose.connect(env.mongoUri, {
-    // @ts-expect-error modern mongoose has proper typings
     serverSelectionTimeoutMS: 5000,
   });
 

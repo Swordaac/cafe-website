@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import './types/express.js'; // Import type extensions
 import { createServer } from 'http';
 import app from './app.js';
 import { connectToDatabase } from './db/mongoose.js';

@@ -75,8 +75,10 @@ class CloudinaryService {
     } catch (error) {
       console.error('=== CLOUDINARY UPLOAD ERROR ===');
       console.error('Error details:', error);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
       throw new Error('Failed to upload image to Cloudinary');
     }
   }
@@ -141,7 +143,7 @@ class CloudinaryService {
       console.log('Ping result:', result);
       
       // Try to get account details
-      const accountResult = await cloudinary.api.account();
+      const accountResult = await cloudinary.api.account_info();
       console.log('Account info:', JSON.stringify(accountResult, null, 2));
       return accountResult;
     } catch (error) {
