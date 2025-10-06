@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card"
 import { Product } from "@/lib/types"
 import { formatPrice } from "@/lib/api"
+import Link from "next/link"
 
 interface ProductCardProps {
   product: Product;
@@ -8,7 +9,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   return (
-    <Card className="overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group">
+    <Link href={`/products/${product._id}`} className="block">
+      <Card className="overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group cursor-pointer">
       <div className="aspect-square relative overflow-hidden">
         {product.imageUrl ? (
           <img 
@@ -35,12 +37,12 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
         
         {/* Status Badge */}
-        {product.status === 'available' && (
+        {product.availabilityStatus === 'available' && (
           <div className="absolute top-4 left-4 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
             AVAILABLE
           </div>
         )}
-        {product.status === 'unavailable' && (
+        {product.availabilityStatus === 'unavailable' && (
           <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
             SOLD OUT
           </div>
@@ -58,11 +60,20 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
         
         {/* Action Button */}
-        <button className="w-full bg-gradient-to-r from-orange-600 to-orange-500 text-white py-3 rounded-xl font-bold hover:from-orange-700 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-lg">
+        <button 
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            // TODO: Implement quick add to order
+            console.log('Quick add to order:', product.name)
+          }}
+          className="w-full bg-gradient-to-r from-orange-600 to-orange-500 text-white py-3 rounded-xl font-bold hover:from-orange-700 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+        >
           Add to Order
         </button>
       </div>
     </Card>
+    </Link>
   );
 }
 

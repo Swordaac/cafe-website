@@ -99,6 +99,21 @@ router.get('/', async (req, res, next) => {
         return next(error);
     }
 });
+// Get single product by ID
+router.get('/:id', async (req, res, next) => {
+    try {
+        const tenantId = req.tenant.id;
+        const { id } = req.params;
+        const product = await Product.findOne({ _id: id, tenantId }).lean();
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+        res.json({ data: product });
+    }
+    catch (error) {
+        return next(error);
+    }
+});
 // Update product
 router.put('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authorize(['editor', 'admin']), upload.single('image'), async (req, res, next) => {
     try {

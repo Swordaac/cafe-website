@@ -32,6 +32,21 @@ router.get('/', async (req, res, next) => {
         return next(error);
     }
 });
+// Get single category by ID
+router.get('/:id', async (req, res, next) => {
+    try {
+        const tenantId = req.tenant.id;
+        const { id } = req.params;
+        const category = await Category.findOne({ _id: id, tenantId }).lean();
+        if (!category) {
+            return res.status(404).json({ error: 'Category not found' });
+        }
+        res.json({ data: category });
+    }
+    catch (error) {
+        return next(error);
+    }
+});
 // Update category
 router.put('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authorize(['editor', 'admin']), async (req, res, next) => {
     try {
