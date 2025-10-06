@@ -34,3 +34,4 @@ export interface ProductsResponse extends ApiResponse<Product[]> {}
 export interface CategoriesResponse extends ApiResponse<Category[]> {}
 
 
+

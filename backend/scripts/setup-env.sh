@@ -47,3 +47,4 @@ echo ""
 echo "After updating .env, run: npm run migrate:food"
 
 
+

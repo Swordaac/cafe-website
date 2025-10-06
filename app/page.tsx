@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/ProductCard"
 import { Navbar } from "@/components/Navbar"
-import { fetchProducts, fetchCategories } from "@/lib/api"
+import { customFetch } from "@/lib/api"
 import { Product, Category } from "@/lib/types"
 import { Zap, DollarSign, Smartphone, MapPin, Download, ShoppingCart, Star, Mail } from 'lucide-react'
 
@@ -14,10 +14,13 @@ export const dynamic = 'force-dynamic'
 
 async function getProducts(searchTerm?: string) {
   try {
-    const [products, categories] = await Promise.all([
-      fetchProducts('Bouchees', undefined, searchTerm),
-      fetchCategories('Bouchees')
-    ]);
+    const tenantId = 'Bouchees'
+    const [productsRes, categoriesRes] = await Promise.all([
+      customFetch<{ data: Product[] }>(`/tenants/${tenantId}/products${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ''}`, { method: 'GET', tenantId }),
+      customFetch<{ data: Category[] }>(`/tenants/${tenantId}/categories`, { method: 'GET', tenantId })
+    ])
+    const products = productsRes.data
+    const categories = categoriesRes.data
     
     // Group products by category
     const productsByCategory = products.reduce((acc, product) => {

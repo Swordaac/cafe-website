@@ -16,7 +16,7 @@ app.use(helmet());
 app.use(compression());
 
 // CORS - Temporary hardcoded for development
-const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', '*'];
+const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
 console.log('CORS allowed origins:', allowedOrigins);
 app.use(
   cors({
