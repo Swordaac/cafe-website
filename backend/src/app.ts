@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import { env } from './config/env.js';
 import { errorHandler, notFound } from './middlewares/errorHandler.js';
 import { router as apiRouter } from './routes/index.js';
+import { router as stripeWebhook } from './routes/stripeWebhook.js';
 
 const app = express();
 
@@ -38,6 +39,9 @@ app.use(
 if (env.nodeEnv !== 'production') {
   app.use(morgan('dev'));
 }
+
+// Mount webhook BEFORE body parsers to preserve raw body for Stripe signature verification
+app.use('/v1', stripeWebhook);
 
 // Parsers
 app.use(express.json({ limit: '1mb' }));
