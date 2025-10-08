@@ -1,13 +1,23 @@
 import { Card } from "@/components/ui/card"
 import { Product } from "@/lib/types"
 import { formatPrice } from "@/lib/api"
+import { useCart } from "@/contexts/cart"
 import Link from "next/link"
+import { ShoppingCart } from "lucide-react"
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const { addToCart } = useCart()
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    addToCart(product, 1)
+  }
+
   return (
     <Link href={`/products/${product._id}`} className="block">
       <Card className="overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 group cursor-pointer">
@@ -61,15 +71,12 @@ export function ProductCard({ product }: ProductCardProps) {
         
         {/* Action Button */}
         <button 
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            // TODO: Implement quick add to order
-            console.log('Quick add to order:', product.name)
-          }}
-          className="w-full bg-gradient-to-r from-orange-600 to-orange-500 text-white py-3 rounded-xl font-bold hover:from-orange-700 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+          onClick={handleAddToCart}
+          disabled={product.availabilityStatus !== 'available'}
+          className="w-full bg-gradient-to-r from-orange-600 to-orange-500 text-white py-3 rounded-xl font-bold hover:from-orange-700 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
         >
-          Add to Order
+          <ShoppingCart className="w-4 h-4" />
+          {product.availabilityStatus === 'available' ? 'Add to Cart' : 'Unavailable'}
         </button>
       </div>
     </Card>

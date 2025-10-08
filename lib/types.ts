@@ -33,5 +33,24 @@ export interface ApiResponse<T> {
 export interface ProductsResponse extends ApiResponse<Product[]> {}
 export interface CategoriesResponse extends ApiResponse<Category[]> {}
 
+export interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
+export interface Cart {
+  items: CartItem[];
+  totalItems: number;
+  totalPrice: number;
+}
+
+export interface PaymentIntent {
+  id: string;
+  clientSecret: string;
+  amount: number;
+  currency: string;
+  status: string;
+}
+
 
 

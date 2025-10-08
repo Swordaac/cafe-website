@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { useAuth } from '@/contexts/auth'
 import { createClient } from '@/lib/supabase'
+import { CartIcon } from '@/components/CartIcon'
 import { Search, Menu, X, Facebook, Instagram, Linkedin, Youtube, Twitter } from 'lucide-react'
 import { useState, useEffect, Suspense } from 'react'
 
@@ -129,6 +130,9 @@ export function Navbar() {
               <Suspense fallback={<div className="w-64 h-10 bg-gray-200 rounded-full animate-pulse"></div>}>
                 <SearchComponent />
               </Suspense>
+
+              {/* Cart Icon */}
+              <CartIcon />
 
               {/* User Actions */}
               <div className="flex items-center space-x-2">

@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button"
 import { customFetch } from "@/lib/api"
 import { Product, Category } from "@/lib/types"
 import { formatPrice } from "@/lib/api"
-import { ArrowLeft, Plus, Minus, Heart, Share2, Star, Clock, MapPin, Phone } from 'lucide-react'
+import { useCart } from "@/contexts/cart"
+import { ArrowLeft, Plus, Minus, Heart, Share2, Star, Clock, MapPin, Phone, ShoppingCart } from 'lucide-react'
 
 export default function ProductPage() {
   const params = useParams()
   const router = useRouter()
   const productId = params.id as string
+  const { addToCart, cart } = useCart()
   
   const [product, setProduct] = useState<Product | null>(null)
   const [category, setCategory] = useState<Category | null>(null)
@@ -20,6 +22,7 @@ export default function ProductPage() {
   const [quantity, setQuantity] = useState(1)
   const [isFavorite, setIsFavorite] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -58,9 +61,18 @@ export default function ProductPage() {
     }
   }, [productId])
 
-  const handleAddToOrder = () => {
-    // TODO: Implement add to order functionality
-    console.log(`Added ${quantity} x ${product?.name} to order`)
+  const handleAddToOrder = async () => {
+    if (!product) return
+    
+    setIsAddingToCart(true)
+    try {
+      addToCart(product, quantity)
+      // Show success feedback
+      setTimeout(() => setIsAddingToCart(false), 1000)
+    } catch (err) {
+      console.error('Error adding to cart:', err)
+      setIsAddingToCart(false)
+    }
   }
 
   const handleShare = async () => {
@@ -266,12 +278,15 @@ export default function ProductPage() {
             {/* Add to Order Button */}
             <Button
               onClick={handleAddToOrder}
-              disabled={product.availabilityStatus !== 'available'}
-              className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              disabled={product.availabilityStatus !== 'available' || isAddingToCart}
+              className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
             >
-              {product.availabilityStatus === 'available' 
-                ? `Add ${quantity} to Order - ${formatPrice(product.priceCents * quantity)}`
-                : 'Currently Unavailable'
+              <ShoppingCart className="w-5 h-5" />
+              {isAddingToCart 
+                ? 'Adding to Cart...' 
+                : product.availabilityStatus === 'available' 
+                  ? `Add ${quantity} to Cart - ${formatPrice(product.priceCents * quantity)}`
+                  : 'Currently Unavailable'
               }
             </Button>
 
