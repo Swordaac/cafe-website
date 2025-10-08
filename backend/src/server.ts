@@ -8,9 +8,9 @@ async function bootstrap() {
   await connectToDatabase();
 
   const server = createServer(app);
-  server.listen(env.port, () => {
+  server.listen(env.port, '0.0.0.0', () => {
     // eslint-disable-next-line no-console
-    console.log(`API listening on http://localhost:${env.port}`);
+    console.log(`API listening on http://0.0.0.0:${env.port}`);
   });
 }
 
