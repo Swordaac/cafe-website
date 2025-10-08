@@ -15,6 +15,7 @@ app.use(compression());
 // CORS - Using environment variable
 const allowedOrigins = env.allowedOrigins;
 console.log('CORS allowed origins:', allowedOrigins);
+console.log('CORS version: 2.0 - Vercel pattern matching enabled');
 app.use(cors({
     origin: (origin, callback) => {
         console.log('CORS check for origin:', origin);
