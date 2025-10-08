@@ -22,6 +22,12 @@ export const env = {
     tenantStrategy: getEnv('TENANT_STRATEGY', 'header'),
     tenantHeader: getEnv('TENANT_HEADER', 'x-tenant-id').toLowerCase(),
     baseDomain: getEnv('BASE_DOMAIN', 'localhost'),
+    stripe: {
+        secretKey: getEnv('STRIPE_SECRET_KEY'),
+        webhookSecret: getEnv('STRIPE_WEBHOOK_SECRET'),
+        applicationFeeBps: Number(getEnv('STRIPE_APP_FEE_BPS', '1000')), // default 10%
+        defaultCurrency: getEnv('STRIPE_DEFAULT_CURRENCY', 'usd'),
+    },
     cloudinary: {
         cloudName: getEnv('CLOUDINARY_CLOUD_NAME'),
         apiKey: getEnv('CLOUDINARY_API_KEY'),

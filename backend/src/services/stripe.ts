@@ -4,7 +4,7 @@ import { PlatformConfig } from '../models/PlatformConfig.js';
 import { Tenant } from '../models/Tenant.js';
 
 export const stripe = new Stripe(env.stripe.secretKey, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-09-30.clover',
 });
 
 export async function getPlatformFeeBps(): Promise<number> {
