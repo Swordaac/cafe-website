@@ -33,6 +33,7 @@ app.use(
       
       // Check for Vercel pattern matching
       const isVercelApp = origin && origin.match(/^https:\/\/cafe-website-[a-z0-9]+-eugenes-projects-[a-z0-9]+\.vercel\.app$/);
+      console.log('Vercel pattern check for:', origin, 'Result:', !!isVercelApp);
       if (isVercelApp) {
         console.log('Origin allowed (Vercel pattern):', origin);
         return callback(null, true);
