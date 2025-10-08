@@ -7,6 +7,9 @@ export const router = Router();
 // Create PaymentIntent on connected account with application fee to platform
 router.post('/payments/intent', resolveTenant, async (req, res, next) => {
     try {
+        if (!stripe) {
+            return res.status(503).json({ error: 'Payment processing is not available. Stripe is not configured.' });
+        }
         const tenantId = req.tenant.id;
         const tenant = await Tenant.findById(tenantId).lean();
         if (!tenant?.stripe?.accountId || !tenant.stripe.chargesEnabled) {
@@ -93,6 +96,9 @@ router.get('/payments/transactions', resolveTenant, async (req, res, next) => {
 // Cancel payment intent
 router.post('/payments/intent/:paymentIntentId/cancel', resolveTenant, async (req, res, next) => {
     try {
+        if (!stripe) {
+            return res.status(503).json({ error: 'Payment processing is not available. Stripe is not configured.' });
+        }
         const tenantId = req.tenant.id;
         const { paymentIntentId } = req.params;
         const transaction = await Transaction.findById(paymentIntentId).lean();

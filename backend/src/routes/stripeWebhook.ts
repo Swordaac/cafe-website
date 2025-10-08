@@ -9,6 +9,10 @@ export const router = express.Router();
 
 // Use raw body for signature verification
 router.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!stripe) {
+    return res.status(503).json({ error: 'Stripe webhooks are not available. Stripe is not configured.' });
+  }
+
   const sig = req.headers['stripe-signature'] as string | undefined;
   if (!sig) return res.status(400).send('Missing stripe-signature');
 

@@ -3,9 +3,12 @@ import { env } from '../config/env.js';
 import { PlatformConfig } from '../models/PlatformConfig.js';
 import { Tenant } from '../models/Tenant.js';
 
-export const stripe = new Stripe(env.stripe.secretKey, {
-  apiVersion: '2025-09-30.clover',
-});
+// Only initialize Stripe if API key is provided
+export const stripe = env.stripe.secretKey 
+  ? new Stripe(env.stripe.secretKey, {
+      apiVersion: '2025-09-30.clover',
+    })
+  : null;
 
 export async function getPlatformFeeBps(): Promise<number> {
   const cfg = await PlatformConfig.findById('platform').lean();
@@ -20,6 +23,8 @@ export async function getDefaultCurrency(): Promise<string> {
 }
 
 export async function ensureConnectedAccount(tenantId: string): Promise<string> {
+  if (!stripe) throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.');
+  
   const tenant = await Tenant.findById(tenantId);
   if (!tenant) throw new Error('Tenant not found');
   if (tenant.stripe?.accountId) return tenant.stripe.accountId;
@@ -37,6 +42,8 @@ export async function ensureConnectedAccount(tenantId: string): Promise<string> 
 }
 
 export async function createAccountLink(accountId: string, returnUrl: string, refreshUrl: string) {
+  if (!stripe) throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.');
+  
   return stripe.accountLinks.create({
     account: accountId,
     refresh_url: refreshUrl,

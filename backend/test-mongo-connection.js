@@ -7,7 +7,7 @@
  * Run with: node test-mongo-connection.js
  */
 
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // Get MongoDB URI from environment
 const mongoUri = process.env.MONGODB_URI;
