@@ -7,8 +7,18 @@ import { authorize } from '../middlewares/authorize.js';
 
 export const router = Router();
 
-// Apply auth and tenant resolution
-router.use(authSupabase, resolveTenant, ensureTenantExists, loadMembership);
+// Handle OPTIONS requests for CORS preflight
+router.options('*', (req, res) => {
+  res.status(200).end();
+});
+
+// Apply auth and tenant resolution (skip for OPTIONS requests)
+router.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+  return authSupabase(req, res, next);
+}, resolveTenant, ensureTenantExists, loadMembership);
 
 // List menu items for current tenant
 router.get('/', requireMembership, async (req, res) => {

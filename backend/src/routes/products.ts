@@ -12,8 +12,19 @@ import fs from 'fs/promises';
 
 export const router = Router({ mergeParams: true });
 
+// Handle OPTIONS requests for CORS preflight
+router.options('*', (req, res) => {
+  res.status(200).end();
+});
+
 // For all routes, ensure tenant id from params exists
-router.use(tenantFromParam, ensureTenantExists);
+// Skip tenant validation for OPTIONS requests (CORS preflight)
+router.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+  return tenantFromParam(req, res, next);
+}, ensureTenantExists);
 
 // Create product
 router.post('/', 

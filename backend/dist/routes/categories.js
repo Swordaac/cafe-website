@@ -5,8 +5,18 @@ import { tenantFromParam, tenantParamMatchesJwt } from '../middlewares/tenant.js
 import { ensureTenantExists, loadMembership } from '../middlewares/membership.js';
 import { authorize } from '../middlewares/authorize.js';
 export const router = Router({ mergeParams: true });
+// Handle OPTIONS requests for CORS preflight
+router.options('*', (req, res) => {
+    res.status(200).end();
+});
 // For all routes, ensure tenant id from params exists
-router.use(tenantFromParam, ensureTenantExists);
+// Skip tenant validation for OPTIONS requests (CORS preflight)
+router.use((req, res, next) => {
+    if (req.method === 'OPTIONS') {
+        return next();
+    }
+    return tenantFromParam(req, res, next);
+}, ensureTenantExists);
 // Create category
 router.post('/', authSupabase, tenantParamMatchesJwt, loadMembership, authorize(['editor', 'admin']), async (req, res, next) => {
     try {
