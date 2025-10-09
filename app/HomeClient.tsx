@@ -1,17 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Product, Category } from "@/lib/types"
 import { Download, MapPin } from 'lucide-react'
 
-interface HomeClientProps {
-  products: Product[]
-  categories: Category[]
-  productsByCategory: Record<string, Product[]>
-  searchTerm?: string
-}
-
-export function HomeClient({ products, categories, productsByCategory, searchTerm }: HomeClientProps) {
+export function HomeClient() {
   const [waitlistMessage, setWaitlistMessage] = useState('')
   const [isWaitlistLoading, setIsWaitlistLoading] = useState(false)
 

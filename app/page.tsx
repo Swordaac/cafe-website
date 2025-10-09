@@ -1,4 +1,6 @@
-import React from 'react'
+'use client'
+
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/ProductCard"
@@ -9,41 +11,71 @@ import { Zap, DollarSign, Smartphone, MapPin, Download, ShoppingCart, Star, Mail
 import { HomeClient } from './HomeClient'
 import { DebugEnv } from '@/components/DebugEnv'
 
-// Force dynamic rendering to always get fresh data
-export const dynamic = 'force-dynamic'
-
-async function getProducts(searchTerm?: string) {
-  try {
-    const tenantId = 'Bouchees'
-    const [productsRes, categoriesRes] = await Promise.all([
-      customFetch<{ data: Product[] }>(`/tenants/${tenantId}/products${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ''}`, { method: 'GET', tenantId }),
-      customFetch<{ data: Category[] }>(`/tenants/${tenantId}/categories`, { method: 'GET', tenantId })
-    ])
-    const products = productsRes.data
-    const categories = categoriesRes.data
-    
-    // Group products by category
-    const productsByCategory = products.reduce((acc, product) => {
-      const categoryName = categories.find(cat => cat._id === product.categoryId)?.name || 'Other';
-      if (!acc[categoryName]) acc[categoryName] = [];
-      acc[categoryName].push(product);
-      return acc;
-    }, {} as Record<string, Product[]>);
-    
-    return { products, categories, productsByCategory, searchTerm };
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    return { products: [], categories: [], productsByCategory: {}, searchTerm };
-  }
-}
-
 interface HomeProps {
   searchParams: { search?: string }
 }
 
-export default async function Home({ searchParams }: HomeProps) {
+export default function Home({ searchParams }: HomeProps) {
   const searchTerm = searchParams.search;
-  const { products, categories, productsByCategory } = await getProducts(searchTerm);
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({})
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        setIsLoading(true)
+        const tenantId = 'Bouchees'
+        
+        const [productsRes, categoriesRes] = await Promise.all([
+          customFetch<{ data: Product[] }>(`/tenants/${tenantId}/products${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ''}`, { 
+            method: 'GET', 
+            tenantId
+          }),
+          customFetch<{ data: Category[] }>(`/tenants/${tenantId}/categories`, { 
+            method: 'GET', 
+            tenantId
+          })
+        ])
+        
+        const productsData = productsRes.data || []
+        const categoriesData = categoriesRes.data || []
+        
+        // Group products by category
+        const productsByCategoryData = productsData.reduce((acc, product) => {
+          const categoryName = categoriesData.find(cat => cat._id === product.categoryId)?.name || 'Other';
+          if (!acc[categoryName]) acc[categoryName] = [];
+          acc[categoryName].push(product);
+          return acc;
+        }, {} as Record<string, Product[]>);
+        
+        setProducts(productsData)
+        setCategories(categoriesData)
+        setProductsByCategory(productsByCategoryData)
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setProducts([])
+        setCategories([])
+        setProductsByCategory({})
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    getProducts()
+  }, [searchTerm])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-orange-600 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600">Loading delicious menu...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -183,12 +215,7 @@ export default async function Home({ searchParams }: HomeProps) {
               <Smartphone className="w-5 h-5" />
               SIGN UP AS CUSTOMER
             </Link>
-            <HomeClient 
-              products={products}
-              categories={categories}
-              productsByCategory={productsByCategory}
-              searchTerm={searchTerm}
-            />
+            <HomeClient />
           </div>
         </div>
         
@@ -359,12 +386,7 @@ export default async function Home({ searchParams }: HomeProps) {
               <ShoppingCart className="w-6 h-6" />
               SIGN UP AS CUSTOMER
             </Link>
-            <HomeClient 
-              products={products}
-              categories={categories}
-              productsByCategory={productsByCategory}
-              searchTerm={searchTerm}
-            />
+            <HomeClient />
           </div>
           
           <div className="mt-12 flex justify-center space-x-8 text-orange-200">
