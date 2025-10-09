@@ -26,8 +26,8 @@ app.use(cors({
             console.log('Origin allowed:', origin);
             return callback(null, true);
         }
-        // Check for Vercel pattern matching
-        const isVercelApp = origin && origin.match(/^https:\/\/cafe-website-[a-z0-9]+-eugenes-projects-[a-z0-9]+\.vercel\.app$/);
+        // Check for Vercel pattern matching (supports v0- prefix and various patterns)
+        const isVercelApp = origin && origin.match(/^https:\/\/(v0-)?cafe-website-[a-z0-9]+-eugenes-projects-[a-z0-9]+\.vercel\.app$/);
         console.log('Vercel pattern check for:', origin, 'Result:', !!isVercelApp);
         if (isVercelApp) {
             console.log('Origin allowed (Vercel pattern):', origin);
