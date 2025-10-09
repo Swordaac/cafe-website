@@ -28,6 +28,10 @@ export default function Home({ searchParams }: HomeProps) {
         setIsLoading(true)
         const tenantId = 'Bouchees'
         
+        // Debug: Log the API URL being used
+        console.log('API Base URL:', process.env.NEXT_PUBLIC_API_URL || 'NOT_SET')
+        console.log('NODE_ENV:', process.env.NODE_ENV)
+        
         const [productsRes, categoriesRes] = await Promise.all([
           customFetch<{ data: Product[] }>(`/tenants/${tenantId}/products${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ''}`, { 
             method: 'GET', 
