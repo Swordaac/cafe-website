@@ -1,6 +1,4 @@
-'use client'
-
-import React, { useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { ProductCard } from "@/components/ProductCard"
@@ -8,6 +6,7 @@ import { Navbar } from "@/components/Navbar"
 import { customFetch } from "@/lib/api"
 import { Product, Category } from "@/lib/types"
 import { Zap, DollarSign, Smartphone, MapPin, Download, ShoppingCart, Star, Mail } from 'lucide-react'
+import { HomeClient } from './HomeClient'
 
 // Force dynamic rendering to always get fresh data
 export const dynamic = 'force-dynamic'
@@ -41,52 +40,10 @@ interface HomeProps {
   searchParams: { search?: string }
 }
 
-export default function Home({ searchParams }: HomeProps) {
+export default async function Home({ searchParams }: HomeProps) {
   const searchTerm = searchParams.search;
-  const [waitlistMessage, setWaitlistMessage] = useState('')
-  const [isWaitlistLoading, setIsWaitlistLoading] = useState(false)
-  const [products, setProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [productsByCategory, setProductsByCategory] = useState<Record<string, Product[]>>({})
-  const [isLoading, setIsLoading] = useState(true)
+  const { products, categories, productsByCategory } = await getProducts(searchTerm);
 
-  // Fetch data on component mount
-  React.useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getProducts(searchTerm)
-        setProducts(data.products)
-        setCategories(data.categories)
-        setProductsByCategory(data.productsByCategory)
-      } catch (error) {
-        console.error('Error fetching products:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    fetchData()
-  }, [searchTerm])
-
-  const joinWaitlist = async (email: string) => {
-    if (!email) {
-      setWaitlistMessage('Please enter your email to join the waitlist')
-      return
-    }
-    
-    setIsWaitlistLoading(true)
-    setWaitlistMessage('')
-    
-    try {
-      // For now, we'll just show a success message
-      // In a real app, you'd send this to your backend
-      setWaitlistMessage('🎉 You\'ve joined our waitlist! We\'ll notify you when we launch.')
-      setTimeout(() => setWaitlistMessage(''), 5000)
-    } catch (error) {
-      setWaitlistMessage('Error joining waitlist. Please try again.')
-    } finally {
-      setIsWaitlistLoading(false)
-    }
-  }
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -224,18 +181,12 @@ export default function Home({ searchParams }: HomeProps) {
               <Smartphone className="w-5 h-5" />
               SIGN UP AS CUSTOMER
             </Link>
-            <button 
-              onClick={() => {
-                const email = prompt('Enter your email to join our waitlist:')
-                if (email) {
-                  joinWaitlist(email)
-                }
-              }}
-              className="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-orange-600 transition-all duration-300 transform hover:scale-105 flex items-center gap-2"
-            >
-              <Download className="w-5 h-5" />
-              JOIN WAITLIST
-            </button>
+            <HomeClient 
+              products={products}
+              categories={categories}
+              productsByCategory={productsByCategory}
+              searchTerm={searchTerm}
+            />
           </div>
         </div>
         
@@ -406,25 +357,13 @@ export default function Home({ searchParams }: HomeProps) {
               <ShoppingCart className="w-6 h-6" />
               SIGN UP AS CUSTOMER
             </Link>
-            <button 
-              onClick={() => {
-                const email = prompt('Enter your email to join our waitlist:')
-                if (email) {
-                  joinWaitlist(email)
-                }
-              }}
-              className="border-2 border-white text-white px-10 py-4 rounded-full font-bold text-xl hover:bg-white hover:text-orange-600 transition-all duration-300 transform hover:scale-105 flex items-center gap-2"
-            >
-              <MapPin className="w-6 h-6" />
-              JOIN WAITLIST
-            </button>
+            <HomeClient 
+              products={products}
+              categories={categories}
+              productsByCategory={productsByCategory}
+              searchTerm={searchTerm}
+            />
           </div>
-          
-          {waitlistMessage && (
-            <div className="mt-8 p-4 bg-green-100 border border-green-300 rounded-lg text-green-800 text-center">
-              {waitlistMessage}
-            </div>
-          )}
           
           <div className="mt-12 flex justify-center space-x-8 text-orange-200">
             <a href="#" className="hover:text-white transition-colors duration-300">Instagram</a>

@@ -51,3 +51,5 @@ if (!process.env.ALLOWED_ORIGINS) {
 
 console.log('\n📝 Expected format:');
 console.log('ALLOWED_ORIGINS=https://cafe-website-mocha.vercel.app,http://localhost:3000');
+
+
