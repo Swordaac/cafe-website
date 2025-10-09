@@ -1,9 +1,24 @@
 'use client'
 
-import { config } from '@/lib/config'
+import { useEffect, useState } from 'react'
 
 export function DebugEnv() {
-  const debugInfo = config.debugInfo
+  const [debugInfo, setDebugInfo] = useState({
+    apiBaseUrl: 'Loading...',
+    nodeEnv: 'Loading...',
+    isClient: false,
+    hasEnvVar: false
+  })
+
+  useEffect(() => {
+    // Only run on client side to avoid hydration mismatch
+    setDebugInfo({
+      apiBaseUrl: process.env.NEXT_PUBLIC_API_URL || 'NOT_SET',
+      nodeEnv: process.env.NODE_ENV || 'NOT_SET',
+      isClient: true,
+      hasEnvVar: !!process.env.NEXT_PUBLIC_API_URL
+    })
+  }, [])
   
   return (
     <div style={{ 
