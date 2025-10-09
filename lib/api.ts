@@ -1,7 +1,8 @@
 import { ProductsResponse, CategoriesResponse, Product, Category } from './types';
 import { createClient } from './supabase';
+import { config } from './config';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
+const API_BASE_URL = config.apiBaseUrl;
 
 export type CustomFetchOptions = Omit<RequestInit, 'headers' | 'body'> & {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';

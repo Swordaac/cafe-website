@@ -7,6 +7,7 @@ import { customFetch } from "@/lib/api"
 import { Product, Category } from "@/lib/types"
 import { Zap, DollarSign, Smartphone, MapPin, Download, ShoppingCart, Star, Mail } from 'lucide-react'
 import { HomeClient } from './HomeClient'
+import { DebugEnv } from '@/components/DebugEnv'
 
 // Force dynamic rendering to always get fresh data
 export const dynamic = 'force-dynamic'
@@ -46,6 +47,7 @@ export default async function Home({ searchParams }: HomeProps) {
 
   return (
     <div className="min-h-screen bg-white">
+      <DebugEnv />
       {/* Hero Section */}
       <section
         className="relative h-screen flex items-center justify-center text-center text-white overflow-hidden"
