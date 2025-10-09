@@ -12,12 +12,22 @@ export function DebugEnv() {
 
   useEffect(() => {
     // Only run on client side to avoid hydration mismatch
-    setDebugInfo({
-      apiBaseUrl: process.env.NEXT_PUBLIC_API_URL || 'NOT_SET',
-      nodeEnv: process.env.NODE_ENV || 'NOT_SET',
-      isClient: true,
-      hasEnvVar: !!process.env.NEXT_PUBLIC_API_URL
-    })
+    try {
+      setDebugInfo({
+        apiBaseUrl: process.env.NEXT_PUBLIC_API_URL || 'NOT_SET',
+        nodeEnv: process.env.NODE_ENV || 'NOT_SET',
+        isClient: true,
+        hasEnvVar: !!process.env.NEXT_PUBLIC_API_URL
+      })
+    } catch (error) {
+      console.error('Debug error:', error)
+      setDebugInfo({
+        apiBaseUrl: 'ERROR',
+        nodeEnv: 'ERROR',
+        isClient: true,
+        hasEnvVar: false
+      })
+    }
   }, [])
   
   return (

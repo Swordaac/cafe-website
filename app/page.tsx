@@ -9,7 +9,7 @@ import { customFetch } from "@/lib/api"
 import { Product, Category } from "@/lib/types"
 import { Zap, DollarSign, Smartphone, MapPin, Download, ShoppingCart, Star, Mail } from 'lucide-react'
 import { HomeClient } from './HomeClient'
-import { DebugEnv } from '@/components/DebugEnv'
+// import { DebugEnv } from '@/components/DebugEnv'
 
 interface HomeProps {
   searchParams: { search?: string }
@@ -79,7 +79,7 @@ export default function Home({ searchParams }: HomeProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      <DebugEnv />
+      {/* <DebugEnv /> */}
       {/* Hero Section */}
       <section
         className="relative h-screen flex items-center justify-center text-center text-white overflow-hidden"
