@@ -188,12 +188,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             currency: 'usd',
             description: `Order for ${cart.totalItems} item(s) from Bouchees`,
             metadata: {
-              items: cart.items.map(item => ({
+              items: JSON.stringify(cart.items.map(item => ({
                 productId: item.product._id,
                 productName: item.product.name,
                 quantity: item.quantity,
                 priceCents: item.product.priceCents
-              }))
+              }))),
+              totalItems: cart.totalItems.toString(),
+              totalPrice: cart.totalPrice.toString()
             }
           }
         }

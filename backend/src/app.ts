@@ -40,6 +40,14 @@ app.use(
         return callback(null, true);
       }
       
+      // Additional fallback for any Vercel app domain (more permissive)
+      const isAnyVercelApp = origin && origin.match(/^https:\/\/.*\.vercel\.app$/);
+      console.log('Any Vercel app check for:', origin, 'Result:', !!isAnyVercelApp);
+      if (isAnyVercelApp) {
+        console.log('Origin allowed (any Vercel app):', origin);
+        return callback(null, true);
+      }
+      
       console.log('Origin not allowed:', origin, 'Allowed origins:', allowedOrigins);
       return callback(new Error('Not allowed by CORS'));
     },

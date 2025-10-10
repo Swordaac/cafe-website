@@ -8,51 +8,55 @@ import { Card } from '@/components/ui/card'
 import { formatPrice } from '@/lib/api'
 import { ArrowLeft, CreditCard, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import StripeElements from '@/components/StripeElements'
 
 function CheckoutContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { cart, clearCart } = useCart()
-  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null)
+  const { cart, clearCart, createPaymentIntent } = useCart()
+  const [paymentIntent, setPaymentIntent] = useState<{ id: string; clientSecret: string } | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'succeeded' | 'failed'>('pending')
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const intentId = searchParams.get('payment_intent')
-    if (intentId) {
-      setPaymentIntentId(intentId)
+    const initializePayment = async () => {
+      try {
+        setIsLoading(true)
+        const intent = await createPaymentIntent()
+        if (intent) {
+          setPaymentIntent({
+            id: intent.id,
+            clientSecret: intent.clientSecret
+          })
+        } else {
+          setError('Failed to create payment intent')
+        }
+      } catch (err) {
+        setError('Failed to initialize payment')
+        console.error('Payment initialization error:', err)
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }, [searchParams])
 
-  const handlePayment = async () => {
-    if (!paymentIntentId) {
-      setError('Payment intent not found')
-      return
-    }
+    initializePayment()
+  }, [createPaymentIntent])
 
-    setIsProcessing(true)
-    setError(null)
+  const handlePaymentSuccess = () => {
+    setPaymentStatus('succeeded')
+    
+    // Clear cart after successful payment
+    setTimeout(() => {
+      clearCart()
+      router.push('/success')
+    }, 2000)
+  }
 
-    try {
-      // In a real implementation, you would integrate with Stripe Elements here
-      // For now, we'll simulate a successful payment
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      setPaymentStatus('succeeded')
-      
-      // Clear cart after successful payment
-      setTimeout(() => {
-        clearCart()
-        router.push('/success')
-      }, 2000)
-      
-    } catch (err) {
-      setPaymentStatus('failed')
-      setError('Payment failed. Please try again.')
-    } finally {
-      setIsProcessing(false)
-    }
+  const handlePaymentError = (errorMessage: string) => {
+    setPaymentStatus('failed')
+    setError(errorMessage)
   }
 
   if (cart.items.length === 0) {
@@ -97,69 +101,42 @@ function CheckoutContent() {
               
               {paymentStatus === 'pending' && (
                 <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-center">
-                      <CreditCard className="w-5 h-5 text-blue-600 mr-2" />
-                      <span className="text-blue-800 font-medium">Payment Method</span>
-                    </div>
-                    <p className="text-blue-700 text-sm mt-1">
-                      In a real implementation, Stripe Elements would be integrated here for secure payment processing.
-                    </p>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Card Number
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="1234 5678 9012 3456"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        disabled
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Expiry Date
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="MM/YY"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          disabled
-                        />
+                  {isLoading ? (
+                    <div className="space-y-4">
+                      <div className="animate-pulse">
+                        <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+                        <div className="h-12 bg-gray-200 rounded"></div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          CVC
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="123"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-                          disabled
-                        />
-                      </div>
+                      <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
                     </div>
-                  </div>
+                  ) : paymentIntent ? (
+                    <StripeElements
+                      clientSecret={paymentIntent.clientSecret}
+                      amount={cart.totalPrice}
+                      onSuccess={handlePaymentSuccess}
+                      onError={handlePaymentError}
+                      isProcessing={isProcessing}
+                      setIsProcessing={setIsProcessing}
+                    />
+                  ) : (
+                    <div className="text-center py-8">
+                      <AlertCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Payment Initialization Failed</h3>
+                      <p className="text-gray-600 mb-4">Unable to initialize payment. Please try again.</p>
+                      <Button
+                        onClick={() => window.location.reload()}
+                        className="bg-orange-600 hover:bg-orange-700 text-white"
+                      >
+                        Retry
+                      </Button>
+                    </div>
+                  )}
 
                   {error && (
                     <div className="p-3 bg-red-100 border border-red-300 rounded-lg text-red-800 text-sm">
                       {error}
                     </div>
                   )}
-
-                  <Button
-                    onClick={handlePayment}
-                    disabled={isProcessing}
-                    className="w-full bg-orange-600 hover:bg-orange-700 text-white py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
-                  >
-                    <CreditCard className="w-5 h-5" />
-                    {isProcessing ? 'Processing Payment...' : `Pay ${formatPrice(cart.totalPrice)}`}
-                  </Button>
                 </div>
               )}
 
