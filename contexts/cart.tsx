@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useReducer, useEffect } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react'
 import { Product, CartItem, Cart, PaymentIntent } from '@/lib/types'
 import { customFetch } from '@/lib/api'
 
@@ -114,6 +114,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, dispatch] = useReducer(cartReducer, initialState)
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const isCreatingPaymentIntent = useRef(false)
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -168,21 +169,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR_CART' })
   }
 
-  const createPaymentIntent = async (): Promise<PaymentIntent | null> => {
+  const createPaymentIntent = useCallback(async (): Promise<PaymentIntent | null> => {
     if (cart.items.length === 0) {
       setError('Cart is empty')
       return null
     }
 
+    // Prevent multiple simultaneous calls
+    if (isCreatingPaymentIntent.current || isLoading) {
+      return null
+    }
+
+    isCreatingPaymentIntent.current = true
     setIsLoading(true)
     setError(null)
 
     try {
+      // Generate a unique idempotency key based on cart contents
+      const cartHash = btoa(JSON.stringify({
+        items: cart.items.map(item => ({
+          productId: item.product._id,
+          quantity: item.quantity
+        })),
+        totalPrice: cart.totalPrice
+      })).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32)
+
       const response = await customFetch<{ data: { clientSecret: string; id: string } }>(
         '/payments/intent',
         {
           method: 'POST',
           tenantId: 'Bouchees',
+          headers: {
+            'Idempotency-Key': cartHash
+          },
           body: {
             amount: cart.totalPrice,
             currency: 'usd',
@@ -215,8 +234,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return null
     } finally {
       setIsLoading(false)
+      isCreatingPaymentIntent.current = false
     }
-  }
+  }, [cart.items, cart.totalPrice, cart.totalItems, isLoading])
 
   const value: CartContextType = {
     cart,

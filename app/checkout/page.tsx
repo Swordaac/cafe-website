@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, Suspense } from 'react'
+import React, { useState, useEffect, Suspense, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useCart } from '@/contexts/cart'
 import { Button } from '@/components/ui/button'
@@ -19,10 +19,17 @@ function CheckoutContent() {
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'succeeded' | 'failed'>('pending')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const hasInitializedPayment = useRef(false)
 
   useEffect(() => {
     const initializePayment = async () => {
+      // Prevent multiple initialization calls
+      if (hasInitializedPayment.current) {
+        return
+      }
+
       try {
+        hasInitializedPayment.current = true
         setIsLoading(true)
         const intent = await createPaymentIntent()
         if (intent) {
