@@ -125,7 +125,7 @@ function CheckoutContent() {
                       onError={handlePaymentError}
                       isProcessing={isProcessing}
                       setIsProcessing={setIsProcessing}
-                      stripeAccountId={paymentIntent.stripeAccountId}
+                      stripeAccountId={paymentIntent.stripeAccountId || undefined}
                     />
                   ) : (
                     <div className="text-center py-8">

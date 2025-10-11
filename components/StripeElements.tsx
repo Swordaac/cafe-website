@@ -137,10 +137,21 @@ export default function StripeElements({
   useEffect(() => {
     setMounted(true)
     // Initialize Stripe with the tenant-specific account
-    loadStripe(
-      publishableKey,
-      { stripeAccount: stripeAccountId }
-    ).then(setStripe)
+    if (stripeAccountId && typeof stripeAccountId === 'string' && stripeAccountId.trim()) {
+      loadStripe(
+        publishableKey,
+        { stripeAccount: stripeAccountId }
+      ).then(setStripe).catch(error => {
+        console.error('Error loading Stripe with account:', error)
+        // Fallback to default initialization
+        loadStripe(publishableKey).then(setStripe)
+      })
+    } else {
+      // Fallback to default Stripe initialization if no account ID
+      loadStripe(publishableKey).then(setStripe).catch(error => {
+        console.error('Error loading Stripe:', error)
+      })
+    }
   }, [stripeAccountId])
 
   if (!mounted || !stripe) {

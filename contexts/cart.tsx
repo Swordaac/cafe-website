@@ -225,7 +225,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         amount: cart.totalPrice,
         currency: 'usd',
         status: 'requires_payment_method',
-        stripeAccountId: response.data.stripeAccountId
+        stripeAccountId: response.data.stripeAccountId || undefined
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create payment intent'
