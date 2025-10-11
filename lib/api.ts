@@ -3,6 +3,8 @@ import { createClient } from './supabase';
 import { config } from './config';
 
 const API_BASE_URL = config.apiBaseUrl;
+// Ensure the base URL ends with a trailing slash so URL resolution appends after /v1
+const API_BASE = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
 
 export type CustomFetchOptions = Omit<RequestInit, 'headers' | 'body'> & {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
@@ -32,7 +34,7 @@ export async function customFetch<T = any>(
   const url = typeof input === 'string' || input instanceof URL
     ? String(input).startsWith('http')
       ? String(input)
-      : `${API_BASE_URL}${String(input).startsWith('/') ? '' : '/'}${String(input)}`
+      : new URL(String(input).startsWith('/') ? String(input).slice(1) : String(input), API_BASE).toString()
     : String(input);
 
   // Resolve access token if auth is requested and no override provided
@@ -105,7 +107,7 @@ export async function protectedFetch(
   const url = typeof input === 'string' || input instanceof URL
     ? String(input).startsWith('http')
       ? input
-      : `${API_BASE_URL}${String(input).startsWith('/') ? '' : '/'}${String(input)}`
+      : new URL(String(input).startsWith('/') ? String(input).slice(1) : String(input), API_BASE).toString()
     : input;
 
   const mergedHeaders: HeadersInit = {
@@ -123,7 +125,7 @@ export async function protectedFetch(
 
 export async function fetchProducts(tenantId: string, categoryId?: string, searchTerm?: string): Promise<Product[]> {
   try {
-    const url = new URL(`tenants/${tenantId}/products`, API_BASE_URL);
+    const url = new URL(`tenants/${tenantId}/products`, API_BASE);
     if (categoryId) {
       url.searchParams.set('categoryId', categoryId);
     }
@@ -197,7 +199,7 @@ function filterProductsByCategoryName(products: Product[], categoryName: string)
 
 export async function fetchCategories(tenantId: string): Promise<Category[]> {
   try {
-    const url = new URL(`tenants/${tenantId}/categories`, API_BASE_URL);
+    const url = new URL(`tenants/${tenantId}/categories`, API_BASE);
     const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
