@@ -7,12 +7,15 @@ import { Transaction } from '../models/Transaction.js';
 import { Product } from '../models/Product.js';
 import { ensureTenantExists } from '../middlewares/membership.js';
 import { resolveTenantStrict } from '../middlewares/tenantStrict.js';
+import { createTenantRateLimiter } from '../middlewares/rateLimit.js';
+import { auditLog } from '../middlewares/auditLog.js';
 
 export const router = Router();
+const tenantRateLimiter = createTenantRateLimiter();
 
 // Create PaymentIntent on connected account with application fee to platform
 // Public creation (customer-side): resolve tenant and ensure it exists
-router.post('/payments/intent', resolveTenant, ensureTenantExists, async (req, res, next) => {
+router.post('/payments/intent', resolveTenant, auditLog, tenantRateLimiter, ensureTenantExists, async (req, res, next) => {
   try {
     if (!stripe) {
       return res.status(503).json({ error: 'Payment processing is not available. Stripe is not configured.' });
@@ -25,6 +28,15 @@ router.post('/payments/intent', resolveTenant, ensureTenantExists, async (req, r
     }
 
     const { items, currency, description, metadata } = req.body ?? {};
+    if (currency && typeof currency !== 'string') {
+      return res.status(400).json({ error: 'currency must be a string (e.g., usd)' });
+    }
+    if (description && typeof description !== 'string') {
+      return res.status(400).json({ error: 'description must be a string' });
+    }
+    if (metadata && typeof metadata !== 'object') {
+      return res.status(400).json({ error: 'metadata must be an object' });
+    }
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'items array is required and must not be empty' });
     }
@@ -147,8 +159,8 @@ router.get('/payments/intent/:paymentIntentId', resolveTenant, ensureTenantExist
     const tenantId = req.tenant!.id;
     const { paymentIntentId } = req.params;
     
-    const transaction = await Transaction.findById(paymentIntentId).lean();
-    if (!transaction || transaction.tenantId !== tenantId) {
+    const transaction = await Transaction.findOne({ _id: paymentIntentId, tenantId }).lean();
+    if (!transaction) {
       return res.status(404).json({ error: 'Payment intent not found' });
     }
     
@@ -191,7 +203,7 @@ router.get('/payments/transactions', resolveTenant, async (req, res, next) => {
 
 // Cancel payment intent
 // Protected cancel (staff): require auth + strict tenant
-router.post('/payments/intent/:paymentIntentId/cancel', authSupabase, resolveTenantStrict, ensureTenantExists, async (req, res, next) => {
+router.post('/payments/intent/:paymentIntentId/cancel', authSupabase, resolveTenantStrict, auditLog, tenantRateLimiter, ensureTenantExists, async (req, res, next) => {
   try {
     if (!stripe) {
       return res.status(503).json({ error: 'Payment processing is not available. Stripe is not configured.' });
@@ -200,8 +212,8 @@ router.post('/payments/intent/:paymentIntentId/cancel', authSupabase, resolveTen
     const tenantId = req.tenant!.id;
     const { paymentIntentId } = req.params;
     
-    const transaction = await Transaction.findById(paymentIntentId).lean();
-    if (!transaction || transaction.tenantId !== tenantId) {
+    const transaction = await Transaction.findOne({ _id: paymentIntentId, tenantId }).lean();
+    if (!transaction) {
       return res.status(404).json({ error: 'Payment intent not found' });
     }
     
@@ -215,7 +227,7 @@ router.post('/payments/intent/:paymentIntentId/cancel', authSupabase, resolveTen
     });
     
     // Update transaction status
-    await Transaction.findByIdAndUpdate(paymentIntentId, { 
+    await Transaction.findOneAndUpdate({ _id: paymentIntentId, tenantId }, { 
       status: pi.status as any 
     });
     

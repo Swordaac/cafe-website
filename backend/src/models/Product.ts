@@ -41,6 +41,7 @@ const productSchema = new Schema<ProductDocument>(
 );
 
 productSchema.index({ tenantId: 1, name: 1 }, { unique: false });
+productSchema.index({ tenantId: 1, categoryId: 1, availabilityStatus: 1 });
 
 export const Product = model<ProductDocument>('Product', productSchema);
 

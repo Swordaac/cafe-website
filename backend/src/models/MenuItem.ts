@@ -25,6 +25,7 @@ const menuItemSchema = new Schema<MenuItemDocument>(
 );
 
 menuItemSchema.index({ tenantId: 1, name: 1 }, { unique: false });
+menuItemSchema.index({ tenantId: 1, category: 1 });
 
 export const MenuItem = model<MenuItemDocument>('MenuItem', menuItemSchema);
 

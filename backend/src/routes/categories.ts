@@ -28,6 +28,8 @@ router.post('/', authSupabase, resolveTenantStrict, ensureTenantExists, loadMemb
   try {
     const tenantId = (req as any).tenant!.id;
     const { name, sortOrder } = req.body ?? {};
+    if (!name || typeof name !== 'string') return res.status(400).json({ error: 'Name is required' });
+    if (sortOrder != null && typeof sortOrder !== 'number') return res.status(400).json({ error: 'sortOrder must be a number' });
     const created = await Category.create({ tenantId, name, sortOrder });
     res.status(201).json({ data: created });
   } catch (error: any) {

@@ -10,5 +10,8 @@ const transactionSchema = new Schema({
     type: { type: String, required: true },
     metadata: { type: Object },
 }, { timestamps: true, versionKey: false });
+// Query helpers
+transactionSchema.index({ tenantId: 1, createdAt: -1 });
+transactionSchema.index({ tenantId: 1, status: 1, createdAt: -1 });
 export const Transaction = model('Transaction', transactionSchema);
 //# sourceMappingURL=Transaction.js.map

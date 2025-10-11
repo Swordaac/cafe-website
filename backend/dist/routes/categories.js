@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { Category } from '../models/Category.js';
 import { authSupabase } from '../middlewares/authSupabase.js';
-import { tenantFromParam, tenantParamMatchesJwt } from '../middlewares/tenant.js';
+import { tenantFromParam } from '../middlewares/tenant.js';
 import { ensureTenantExists, loadMembership } from '../middlewares/membership.js';
 import { authorize } from '../middlewares/authorize.js';
+import { resolveTenantStrict } from '../middlewares/tenantStrict.js';
 export const router = Router({ mergeParams: true });
 // Handle OPTIONS requests for CORS preflight
 router.options('*', (req, res) => {
@@ -17,11 +18,15 @@ router.use((req, res, next) => {
     }
     return tenantFromParam(req, res, next);
 }, ensureTenantExists);
-// Create category
-router.post('/', authSupabase, tenantParamMatchesJwt, loadMembership, authorize(['editor', 'admin']), async (req, res, next) => {
+// Create category (Protected)
+router.post('/', authSupabase, resolveTenantStrict, ensureTenantExists, loadMembership, authorize(['editor', 'admin']), async (req, res, next) => {
     try {
         const tenantId = req.tenant.id;
         const { name, sortOrder } = req.body ?? {};
+        if (!name || typeof name !== 'string')
+            return res.status(400).json({ error: 'Name is required' });
+        if (sortOrder != null && typeof sortOrder !== 'number')
+            return res.status(400).json({ error: 'sortOrder must be a number' });
         const created = await Category.create({ tenantId, name, sortOrder });
         res.status(201).json({ data: created });
     }
@@ -31,7 +36,7 @@ router.post('/', authSupabase, tenantParamMatchesJwt, loadMembership, authorize(
         return next(error);
     }
 });
-// List categories
+// List categories (Public)
 router.get('/', async (req, res, next) => {
     try {
         const tenantId = req.tenant.id;
@@ -42,7 +47,7 @@ router.get('/', async (req, res, next) => {
         return next(error);
     }
 });
-// Get single category by ID
+// Get single category by ID (Public)
 router.get('/:id', async (req, res, next) => {
     try {
         const tenantId = req.tenant.id;
@@ -57,8 +62,8 @@ router.get('/:id', async (req, res, next) => {
         return next(error);
     }
 });
-// Update category
-router.put('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authorize(['editor', 'admin']), async (req, res, next) => {
+// Update category (Protected)
+router.put('/:id', authSupabase, resolveTenantStrict, ensureTenantExists, loadMembership, authorize(['editor', 'admin']), async (req, res, next) => {
     try {
         const tenantId = req.tenant.id;
         const { id } = req.params;
@@ -72,8 +77,8 @@ router.put('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authoriz
         return next(error);
     }
 });
-// Delete category
-router.delete('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authorize('admin'), async (req, res, next) => {
+// Delete category (Protected)
+router.delete('/:id', authSupabase, resolveTenantStrict, ensureTenantExists, loadMembership, authorize('admin'), async (req, res, next) => {
     try {
         const tenantId = req.tenant.id;
         const { id } = req.params;

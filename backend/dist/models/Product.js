@@ -15,5 +15,6 @@ const productSchema = new Schema({
     availabilityStatus: { type: String, enum: ['available', 'unavailable', 'archived'], default: 'available' },
 }, { timestamps: true, versionKey: false });
 productSchema.index({ tenantId: 1, name: 1 }, { unique: false });
+productSchema.index({ tenantId: 1, categoryId: 1, availabilityStatus: 1 });
 export const Product = model('Product', productSchema);
 //# sourceMappingURL=Product.js.map

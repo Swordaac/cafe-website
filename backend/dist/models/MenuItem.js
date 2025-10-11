@@ -8,5 +8,6 @@ const menuItemSchema = new Schema({
     imageUrl: { type: String },
 }, { timestamps: true, versionKey: false });
 menuItemSchema.index({ tenantId: 1, name: 1 }, { unique: false });
+menuItemSchema.index({ tenantId: 1, category: 1 });
 export const MenuItem = model('MenuItem', menuItemSchema);
 //# sourceMappingURL=MenuItem.js.map

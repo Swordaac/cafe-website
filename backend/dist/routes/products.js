@@ -2,9 +2,10 @@ import { Router } from 'express';
 import { Product } from '../models/Product.js';
 import { Category } from '../models/Category.js';
 import { authSupabase } from '../middlewares/authSupabase.js';
-import { tenantFromParam, tenantParamMatchesJwt } from '../middlewares/tenant.js';
+import { tenantFromParam } from '../middlewares/tenant.js';
 import { ensureTenantExists, loadMembership } from '../middlewares/membership.js';
 import { authorize } from '../middlewares/authorize.js';
+import { resolveTenantStrict } from '../middlewares/tenantStrict.js';
 import { upload } from '../middlewares/upload.js';
 import { cloudinaryService } from '../services/cloudinary.js';
 import fs from 'fs/promises';
@@ -22,7 +23,7 @@ router.use((req, res, next) => {
     return tenantFromParam(req, res, next);
 }, ensureTenantExists);
 // Create product
-router.post('/', authSupabase, tenantParamMatchesJwt, loadMembership, authorize(['editor', 'admin']), upload.single('image'), async (req, res, next) => {
+router.post('/', authSupabase, resolveTenantStrict, ensureTenantExists, loadMembership, authorize(['editor', 'admin']), upload.single('image'), async (req, res, next) => {
     try {
         const tenantId = req.tenant.id;
         const name = req.body.name;
@@ -125,7 +126,7 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 // Update product
-router.put('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authorize(['editor', 'admin']), upload.single('image'), async (req, res, next) => {
+router.put('/:id', authSupabase, resolveTenantStrict, ensureTenantExists, loadMembership, authorize(['editor', 'admin']), upload.single('image'), async (req, res, next) => {
     try {
         const tenantId = req.tenant.id;
         const { id } = req.params;
@@ -191,7 +192,7 @@ router.put('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authoriz
 });
 // Delete product
 // Delete product
-router.delete('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authorize('admin'), async (req, res, next) => {
+router.delete('/:id', authSupabase, resolveTenantStrict, ensureTenantExists, loadMembership, authorize('admin'), async (req, res, next) => {
     try {
         const tenantId = req.tenant.id;
         const { id } = req.params;

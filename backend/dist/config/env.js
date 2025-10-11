@@ -22,6 +22,10 @@ export const env = {
     tenantStrategy: getEnv('TENANT_STRATEGY', 'header'),
     tenantHeader: getEnv('TENANT_HEADER', 'x-tenant-id').toLowerCase(),
     baseDomain: getEnv('BASE_DOMAIN', 'localhost'),
+    rateLimit: {
+        windowMs: Number(getEnv('RATE_LIMIT_WINDOW_MS', '60000')),
+        max: Number(getEnv('RATE_LIMIT_MAX', '60')),
+    },
     stripe: {
         secretKey: getEnv('STRIPE_SECRET_KEY', ''),
         webhookSecret: getEnv('STRIPE_WEBHOOK_SECRET', ''),
