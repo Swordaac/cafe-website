@@ -123,7 +123,7 @@ export async function protectedFetch(
 
 export async function fetchProducts(tenantId: string, categoryId?: string, searchTerm?: string): Promise<Product[]> {
   try {
-    const url = new URL(`${API_BASE_URL}/tenants/${tenantId}/products`);
+    const url = new URL(`tenants/${tenantId}/products`, API_BASE_URL);
     if (categoryId) {
       url.searchParams.set('categoryId', categoryId);
     }
@@ -197,7 +197,8 @@ function filterProductsByCategoryName(products: Product[], categoryName: string)
 
 export async function fetchCategories(tenantId: string): Promise<Category[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/tenants/${tenantId}/categories`, {
+    const url = new URL(`tenants/${tenantId}/categories`, API_BASE_URL);
+    const response = await fetch(url.toString(), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
