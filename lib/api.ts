@@ -86,10 +86,11 @@ export async function customFetch<T = any>(
   return json as T;
 }
 
-// Protected fetch helper that injects Authorization and x-tenant-id headers
+// Protected fetch helper that injects Authorization only.
+// For admin UIs, always use path-based routes like `/tenants/:tenantId/...`.
 export async function protectedFetch(
   input: string | URL,
-  init: RequestInit & { tenantId: string }
+  init: RequestInit = {}
 ): Promise<Response> {
   const supabase = createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -98,7 +99,7 @@ export async function protectedFetch(
     throw new Error('Not authenticated');
   }
 
-  const { tenantId, headers, ...rest } = init;
+  const { headers, ...rest } = init as any;
 
   // Support relative API paths by prefixing API_BASE_URL
   const url = typeof input === 'string' || input instanceof URL
@@ -109,10 +110,13 @@ export async function protectedFetch(
 
   const mergedHeaders: HeadersInit = {
     'Content-Type': 'application/json',
-    'x-tenant-id': tenantId,
     'Authorization': `Bearer ${accessToken}`,
     ...(headers || {}),
   };
+  // Ensure we do NOT send x-tenant-id for protected calls
+  if ((mergedHeaders as any)['x-tenant-id']) {
+    delete (mergedHeaders as any)['x-tenant-id'];
+  }
 
   return fetch(url, { ...rest, headers: mergedHeaders });
 }
