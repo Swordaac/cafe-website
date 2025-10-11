@@ -2,9 +2,10 @@ import { Router } from 'express';
 import type {} from '../types/express.js';
 import { Category } from '../models/Category.js';
 import { authSupabase } from '../middlewares/authSupabase.js';
-import { tenantFromParam, tenantParamMatchesJwt } from '../middlewares/tenant.js';
+import { tenantFromParam } from '../middlewares/tenant.js';
 import { ensureTenantExists, loadMembership } from '../middlewares/membership.js';
 import { authorize } from '../middlewares/authorize.js';
+import { resolveTenantStrict } from '../middlewares/tenantStrict.js';
 
 export const router = Router({ mergeParams: true });
 
@@ -22,8 +23,8 @@ router.use((req, res, next) => {
   return tenantFromParam(req, res, next);
 }, ensureTenantExists);
 
-// Create category
-router.post('/', authSupabase, tenantParamMatchesJwt, loadMembership, authorize(['editor', 'admin']), async (req, res, next) => {
+// Create category (Protected)
+router.post('/', authSupabase, resolveTenantStrict, ensureTenantExists, loadMembership, authorize(['editor', 'admin']), async (req, res, next) => {
   try {
     const tenantId = (req as any).tenant!.id;
     const { name, sortOrder } = req.body ?? {};
@@ -35,7 +36,7 @@ router.post('/', authSupabase, tenantParamMatchesJwt, loadMembership, authorize(
   }
 });
 
-// List categories
+// List categories (Public)
 router.get('/', async (req, res, next) => {
   try {
     const tenantId = (req as any).tenant!.id;
@@ -46,7 +47,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// Get single category by ID
+// Get single category by ID (Public)
 router.get('/:id', async (req, res, next) => {
   try {
     const tenantId = (req as any).tenant!.id;
@@ -63,8 +64,8 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// Update category
-router.put('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authorize(['editor', 'admin']), async (req, res, next) => {
+// Update category (Protected)
+router.put('/:id', authSupabase, resolveTenantStrict, ensureTenantExists, loadMembership, authorize(['editor', 'admin']), async (req, res, next) => {
   try {
     const tenantId = (req as any).tenant!.id;
     const { id } = req.params;
@@ -77,8 +78,8 @@ router.put('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authoriz
   }
 });
 
-// Delete category
-router.delete('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authorize('admin'), async (req, res, next) => {
+// Delete category (Protected)
+router.delete('/:id', authSupabase, resolveTenantStrict, ensureTenantExists, loadMembership, authorize('admin'), async (req, res, next) => {
   try {
     const tenantId = (req as any).tenant!.id;
     const { id } = req.params;

@@ -4,6 +4,7 @@ import { authSupabase } from '../middlewares/authSupabase.js';
 import { resolveTenant } from '../middlewares/tenant.js';
 import { ensureTenantExists, loadMembership, requireMembership } from '../middlewares/membership.js';
 import { authorize } from '../middlewares/authorize.js';
+import { resolveTenantStrict } from '../middlewares/tenantStrict.js';
 
 export const router = Router();
 
@@ -12,23 +13,25 @@ router.options('*', (req, res) => {
   res.status(200).end();
 });
 
-// Apply auth and tenant resolution (skip for OPTIONS requests)
+// Public browse chain: resolveTenant + ensureTenantExists
 router.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    return next();
-  }
-  return authSupabase(req, res, next);
-}, resolveTenant, ensureTenantExists, loadMembership);
+  if (req.method === 'OPTIONS') return next();
+  return resolveTenant(req, res, next);
+}, ensureTenantExists);
+
+// Protected subrouter for modifications and listing requiring membership
+const protectedRouter = Router();
+protectedRouter.use(authSupabase, resolveTenantStrict, ensureTenantExists, loadMembership);
 
 // List menu items for current tenant
-router.get('/', requireMembership, async (req, res) => {
+protectedRouter.get('/', requireMembership, async (req, res) => {
   const tenantId = req.tenant!.id;
   const items = await MenuItem.find({ tenantId }).lean();
   res.json({ data: items });
 });
 
 // Create a menu item for current tenant
-router.post('/', authorize(['editor', 'admin']), async (req, res) => {
+protectedRouter.post('/', authorize(['editor', 'admin']), async (req, res) => {
   const tenantId = req.tenant!.id;
   const { name, description, priceCents, category, imageUrl } = req.body ?? {};
   const created = await MenuItem.create({ tenantId, name, description, priceCents, category, imageUrl });
@@ -36,7 +39,7 @@ router.post('/', authorize(['editor', 'admin']), async (req, res) => {
 });
 
 // Update a menu item (only within tenant)
-router.patch('/:id', authorize(['editor', 'admin']), async (req, res) => {
+protectedRouter.patch('/:id', authorize(['editor', 'admin']), async (req, res) => {
   const tenantId = req.tenant!.id;
   const { id } = req.params;
   const update = req.body ?? {};
@@ -46,7 +49,9 @@ router.patch('/:id', authorize(['editor', 'admin']), async (req, res) => {
 });
 
 // Delete a menu item (only within tenant)
-router.delete('/:id', authorize('admin'), async (req, res) => {
+protectedRouter.delete('/:id', authorize('admin'), async (req, res) => {
+// Mount protected routes at same path base
+router.use('/', protectedRouter);
   const tenantId = req.tenant!.id;
   const { id } = req.params;
   const deleted = await MenuItem.findOneAndDelete({ _id: id, tenantId });

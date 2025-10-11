@@ -14,7 +14,7 @@ function CheckoutContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { cart, clearCart, createPaymentIntent } = useCart()
-  const [paymentIntent, setPaymentIntent] = useState<{ id: string; clientSecret: string } | null>(null)
+  const [paymentIntent, setPaymentIntent] = useState<{ id: string; clientSecret: string; stripeAccountId: string } | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'succeeded' | 'failed'>('pending')
   const [error, setError] = useState<string | null>(null)
@@ -35,7 +35,8 @@ function CheckoutContent() {
         if (intent) {
           setPaymentIntent({
             id: intent.id,
-            clientSecret: intent.clientSecret
+            clientSecret: intent.clientSecret,
+            stripeAccountId: intent.stripeAccountId
           })
         } else {
           setError('Failed to create payment intent')
@@ -124,6 +125,7 @@ function CheckoutContent() {
                       onError={handlePaymentError}
                       isProcessing={isProcessing}
                       setIsProcessing={setIsProcessing}
+                      stripeAccountId={paymentIntent.stripeAccountId}
                     />
                   ) : (
                     <div className="text-center py-8">

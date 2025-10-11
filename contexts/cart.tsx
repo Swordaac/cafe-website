@@ -185,16 +185,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setError(null)
 
     try {
-      // Generate a unique idempotency key based on cart contents
-      const cartHash = btoa(JSON.stringify({
-        items: cart.items.map(item => ({
-          productId: item.product._id,
-          quantity: item.quantity
-        })),
-        totalPrice: cart.totalPrice
-      })).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32)
+      // Generate idempotency key based on cart contents only (no timestamp)
+      // This allows the same cart to create the same payment intent
+      const sortedItems = cart.items
+        .map(item => `${item.product._id}:${item.quantity}`)
+        .sort()
+        .join('|');
+      
+      const cartHash = btoa(`${sortedItems}-${cart.totalPrice}`)
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .substring(0, 32);
 
-      const response = await customFetch<{ data: { clientSecret: string; id: string } }>(
+      const response = await customFetch<{ data: { clientSecret: string; id: string; stripeAccountId: string } }>(
         '/payments/intent',
         {
           method: 'POST',
@@ -203,16 +205,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             'Idempotency-Key': cartHash
           },
           body: {
-            amount: cart.totalPrice,
+            items: cart.items.map(item => ({
+              productId: item.product._id,
+              quantity: item.quantity
+            })),
             currency: 'usd',
             description: `Order for ${cart.totalItems} item(s) from Bouchees`,
             metadata: {
-              items: JSON.stringify(cart.items.map(item => ({
-                productId: item.product._id,
-                productName: item.product.name,
-                quantity: item.quantity,
-                priceCents: item.product.priceCents
-              }))),
               totalItems: cart.totalItems.toString(),
               totalPrice: cart.totalPrice.toString()
             }
@@ -225,7 +224,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clientSecret: response.data.clientSecret,
         amount: cart.totalPrice,
         currency: 'usd',
-        status: 'requires_payment_method'
+        status: 'requires_payment_method',
+        stripeAccountId: response.data.stripeAccountId
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create payment intent'

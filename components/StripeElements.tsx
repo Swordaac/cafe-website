@@ -119,6 +119,7 @@ interface StripeElementsProps {
   onError: (error: string) => void
   isProcessing: boolean
   setIsProcessing: (processing: boolean) => void
+  stripeAccountId: string
 }
 
 export default function StripeElements({ 
@@ -127,15 +128,22 @@ export default function StripeElements({
   onSuccess, 
   onError, 
   isProcessing, 
-  setIsProcessing 
+  setIsProcessing,
+  stripeAccountId
 }: StripeElementsProps) {
   const [mounted, setMounted] = useState(false)
+  const [stripe, setStripe] = useState<any>(null)
 
   useEffect(() => {
     setMounted(true)
-  }, [])
+    // Initialize Stripe with the tenant-specific account
+    loadStripe(
+      publishableKey,
+      { stripeAccount: stripeAccountId }
+    ).then(setStripe)
+  }, [stripeAccountId])
 
-  if (!mounted) {
+  if (!mounted || !stripe) {
     return (
       <div className="space-y-4">
         <div className="animate-pulse">
@@ -148,7 +156,7 @@ export default function StripeElements({
   }
 
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={stripe}>
       <StripePaymentForm
         clientSecret={clientSecret}
         amount={amount}

@@ -3,9 +3,10 @@ import type {} from '../types/express.js';
 import { Product } from '../models/Product.js';
 import { Category } from '../models/Category.js';
 import { authSupabase } from '../middlewares/authSupabase.js';
-import { tenantFromParam, tenantParamMatchesJwt } from '../middlewares/tenant.js';
+import { tenantFromParam } from '../middlewares/tenant.js';
 import { ensureTenantExists, loadMembership } from '../middlewares/membership.js';
 import { authorize } from '../middlewares/authorize.js';
+import { resolveTenantStrict } from '../middlewares/tenantStrict.js';
 import { upload } from '../middlewares/upload.js';
 import { cloudinaryService } from '../services/cloudinary.js';
 import fs from 'fs/promises';
@@ -29,7 +30,8 @@ router.use((req, res, next) => {
 // Create product
 router.post('/', 
   authSupabase, 
-  tenantParamMatchesJwt, 
+  resolveTenantStrict, 
+  ensureTenantExists,
   loadMembership, 
   authorize(['editor', 'admin']),
   upload.single('image'),
@@ -147,7 +149,8 @@ router.get('/:id', async (req, res, next) => {
 // Update product
 router.put('/:id', 
   authSupabase, 
-  tenantParamMatchesJwt, 
+  resolveTenantStrict, 
+  ensureTenantExists,
   loadMembership, 
   authorize(['editor', 'admin']),
   upload.single('image'),
@@ -222,7 +225,7 @@ router.put('/:id',
 
 // Delete product
 // Delete product
-router.delete('/:id', authSupabase, tenantParamMatchesJwt, loadMembership, authorize('admin'), async (req, res, next) => {
+router.delete('/:id', authSupabase, resolveTenantStrict, ensureTenantExists, loadMembership, authorize('admin'), async (req, res, next) => {
     try {
       const tenantId = (req as any).tenant!.id;
       const { id } = req.params;

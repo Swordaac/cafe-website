@@ -1,13 +1,15 @@
 import { Router } from 'express';
 import { authSupabase } from '../middlewares/authSupabase.js';
-import { tenantFromParam, tenantParamMatchesJwt } from '../middlewares/tenant.js';
+import { tenantFromParam } from '../middlewares/tenant.js';
 import { ensureConnectedAccount, createAccountLink } from '../services/stripe.js';
 import { Tenant } from '../models/Tenant.js';
+import { resolveTenantStrict } from '../middlewares/tenantStrict.js';
+import { ensureTenantExists } from '../middlewares/membership.js';
 
 export const router = Router({ mergeParams: true });
 
 // Create or fetch a connected account and return an onboarding link
-router.post('/tenants/:tenantId/stripe/account-link', authSupabase, tenantFromParam, tenantParamMatchesJwt, async (req, res, next) => {
+router.post('/tenants/:tenantId/stripe/account-link', authSupabase, tenantFromParam, resolveTenantStrict, ensureTenantExists, async (req, res, next) => {
   try {
     const tenantId = req.params.tenantId;
     const { returnUrl, refreshUrl } = req.body ?? {};
@@ -22,7 +24,7 @@ router.post('/tenants/:tenantId/stripe/account-link', authSupabase, tenantFromPa
 });
 
 // Get current connect account status
-router.get('/tenants/:tenantId/stripe/account', authSupabase, tenantFromParam, tenantParamMatchesJwt, async (req, res, next) => {
+router.get('/tenants/:tenantId/stripe/account', authSupabase, tenantFromParam, resolveTenantStrict, ensureTenantExists, async (req, res, next) => {
   try {
     const tenantId = req.params.tenantId;
     const tenant = await Tenant.findById(tenantId).lean();
