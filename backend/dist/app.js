@@ -26,6 +26,13 @@ app.use(cors({
             console.log('Origin allowed:', origin);
             return callback(null, true);
         }
+        // Check for production domain
+        const isProductionDomain = origin && origin.match(/^https:\/\/(www\.)?bouchees\.cafe$/);
+        console.log('Production domain check for:', origin, 'Result:', !!isProductionDomain);
+        if (isProductionDomain) {
+            console.log('Origin allowed (production domain):', origin);
+            return callback(null, true);
+        }
         // Check for Vercel pattern matching (supports v0- prefix and various patterns)
         const isVercelApp = origin && origin.match(/^https:\/\/(v0-)?cafe-website-[a-z0-9]+-eugenes-projects-[a-z0-9]+\.vercel\.app$/);
         console.log('Vercel pattern check for:', origin, 'Result:', !!isVercelApp);
