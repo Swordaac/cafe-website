@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/auth'
 import { useRouter } from 'next/navigation'
 import { customFetch } from '@/lib/api'
+import { signOutUser } from '@/lib/auth-utils'
 import { Product, Category } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -120,13 +121,7 @@ export default function Dashboard() {
   }
 
   const handleSignOut = async () => {
-    try {
-      const supabase = (await import('@/lib/supabase')).createClient()
-      await supabase.auth.signOut()
-      router.push('/')
-    } catch (error) {
-      console.error('Error signing out:', error)
-    }
+    await signOutUser()
   }
 
   const filteredProducts = products.filter(product => {

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { useAuth } from '@/contexts/auth'
 import { createClient } from '@/lib/supabase'
+import { signOutUser } from '@/lib/auth-utils'
 import { CartIcon } from '@/components/CartIcon'
 import { Search, Menu, X, Facebook, Instagram, Linkedin, Youtube, Twitter } from 'lucide-react'
 import { useState, useEffect, Suspense } from 'react'
@@ -34,7 +35,7 @@ export function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    await signOutUser()
   }
 
   const isActive = (path: string) => {

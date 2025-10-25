@@ -1,8 +1,13 @@
 import { Router } from 'express';
+import { SignJWT } from 'jose';
 import crypto from 'crypto';
 import { Tenant } from '../models/Tenant.js';
 import { Membership } from '../models/Membership.js';
 import { authSupabase } from '../middlewares/authSupabase.js';
+import { tenantFromParam } from '../middlewares/tenant.js';
+import { ensureTenantExists, loadMembership } from '../middlewares/membership.js';
+import { authorize } from '../middlewares/authorize.js';
+import { env } from '../config/env.js';
 export const router = Router();
 // Provision a new tenant and assign current user as admin
 router.post('/', authSupabase, async (req, res, next) => {
@@ -47,6 +52,32 @@ router.get('/:tenantId/memberships', authSupabase, async (req, res, next) => {
         // Get all memberships for this tenant
         const memberships = await Membership.find({ tenantId }).lean();
         res.json({ data: memberships });
+    }
+    catch (error) {
+        return next(error);
+    }
+});
+// Issue a short-lived tenant-bound token for dashboard/admin usage
+// Requires the caller to be authenticated and a member (editor or admin) of the tenant
+router.post('/:tenantId/token', authSupabase, tenantFromParam, ensureTenantExists, loadMembership, authorize(['editor', 'admin']), async (req, res, next) => {
+    try {
+        const tenantId = req.tenant.id;
+        const userId = req.auth.userId;
+        const email = req.auth.email;
+        const role = (req.membership?.role ?? 'viewer');
+        const secret = new TextEncoder().encode(env.supabaseJwtSecret);
+        // Short-lived token (e.g., 30 minutes) containing tenant_id claim
+        const jwt = await new SignJWT({
+            sub: userId,
+            email,
+            role,
+            tenant_id: tenantId,
+        })
+            .setProtectedHeader({ alg: 'HS256' })
+            .setIssuedAt()
+            .setExpirationTime('30m')
+            .sign(secret);
+        return res.status(201).json({ data: { token: jwt, tenantId } });
     }
     catch (error) {
         return next(error);
