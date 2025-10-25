@@ -34,4 +34,22 @@ router.get('/mine', authSupabase, async (req, res, next) => {
         return next(error);
     }
 });
+// List memberships for a specific tenant
+router.get('/:tenantId/memberships', authSupabase, async (req, res, next) => {
+    try {
+        const { tenantId } = req.params;
+        const userId = req.auth.userId;
+        // Check if user has membership with this tenant
+        const userMembership = await Membership.findOne({ tenantId, userId }).lean();
+        if (!userMembership) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+        // Get all memberships for this tenant
+        const memberships = await Membership.find({ tenantId }).lean();
+        res.json({ data: memberships });
+    }
+    catch (error) {
+        return next(error);
+    }
+});
 //# sourceMappingURL=tenants.js.map

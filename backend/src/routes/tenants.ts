@@ -1,8 +1,13 @@
 import { Router } from 'express';
+import { SignJWT } from 'jose';
 import crypto from 'crypto';
 import { Tenant } from '../models/Tenant.js';
 import { Membership } from '../models/Membership.js';
 import { authSupabase } from '../middlewares/authSupabase.js';
+import { tenantFromParam } from '../middlewares/tenant.js';
+import { ensureTenantExists, loadMembership } from '../middlewares/membership.js';
+import { authorize } from '../middlewares/authorize.js';
+import { env } from '../config/env.js';
 
 export const router = Router();
 
@@ -37,5 +42,62 @@ router.get('/mine', authSupabase, async (req, res, next) => {
     return next(error);
   }
 });
+
+// List memberships for a specific tenant
+router.get('/:tenantId/memberships', authSupabase, async (req, res, next) => {
+  try {
+    const { tenantId } = req.params;
+    const userId = req.auth!.userId;
+    
+    // Check if user has membership with this tenant
+    const userMembership = await Membership.findOne({ tenantId, userId }).lean();
+    if (!userMembership) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    // Get all memberships for this tenant
+    const memberships = await Membership.find({ tenantId }).lean();
+    res.json({ data: memberships });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+
+// Issue a short-lived tenant-bound token for dashboard/admin usage
+// Requires the caller to be authenticated and a member (editor or admin) of the tenant
+router.post('/:tenantId/token',
+  authSupabase,
+  tenantFromParam,
+  ensureTenantExists,
+  loadMembership,
+  authorize(['editor', 'admin']),
+  async (req, res, next) => {
+    try {
+      const tenantId = (req as any).tenant!.id as string;
+      const userId = (req as any).auth!.userId as string;
+      const email = (req as any).auth!.email as string | undefined;
+      const role = ((req as any).membership?.role ?? 'viewer') as 'viewer' | 'editor' | 'admin';
+
+      const secret = new TextEncoder().encode(env.supabaseJwtSecret);
+
+      // Short-lived token (e.g., 30 minutes) containing tenant_id claim
+      const jwt = await new SignJWT({
+        sub: userId,
+        email,
+        role,
+        tenant_id: tenantId,
+      })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setIssuedAt()
+        .setExpirationTime('30m')
+        .sign(secret);
+
+      return res.status(201).json({ data: { token: jwt, tenantId } });
+    } catch (error) {
+      return next(error);
+    }
+  }
+);
 
 

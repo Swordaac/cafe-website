@@ -43,6 +43,7 @@ export async function customFetch<T = any>(
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
     accessToken = session?.access_token;
+    console.log('Auth requested, session:', !!session, 'accessToken:', !!accessToken);
     if (!accessToken) throw new Error('Not authenticated');
   }
 
@@ -50,6 +51,9 @@ export async function customFetch<T = any>(
   const mergedHeaders: HeadersInit = { ...(headers || {}) };
   if (tenantId) (mergedHeaders as any)['x-tenant-id'] = tenantId;
   if (auth && accessToken) (mergedHeaders as any)['Authorization'] = `Bearer ${accessToken}`;
+  
+  console.log('Making request to:', url);
+  console.log('Headers:', mergedHeaders);
 
   // If body is FormData, let fetch set the correct Content-Type
   let finalBody: BodyInit | undefined;

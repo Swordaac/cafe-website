@@ -7,8 +7,9 @@ import { ProductCard } from "@/components/ProductCard"
 import { Navbar } from "@/components/Navbar"
 import { customFetch } from "@/lib/api"
 import { Product, Category } from "@/lib/types"
-import { Zap, DollarSign, Smartphone, MapPin, Download, ShoppingCart, Star, Mail } from 'lucide-react'
+import { Zap, DollarSign, Smartphone, MapPin, Download, ShoppingCart, Star, Mail, Settings } from 'lucide-react'
 import { HomeClient } from './HomeClient'
+import { useAuth } from '@/contexts/auth'
 // import { DebugEnv } from '@/components/DebugEnv'
 
 interface HomeProps {
@@ -16,6 +17,7 @@ interface HomeProps {
 }
 
 export default function Home({ searchParams }: HomeProps) {
+  const { user } = useAuth()
   const searchTerm = searchParams.search;
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -118,10 +120,16 @@ export default function Home({ searchParams }: HomeProps) {
             
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/auth" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-xl">
-                SIGN UP AS CUSTOMER
-              </Link>
-
+              {user ? (
+                <Link href="/dashboard" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-xl flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  MANAGE MENU
+                </Link>
+              ) : (
+                <Link href="/auth" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-xl">
+                  SIGN UP AS CUSTOMER
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -215,10 +223,17 @@ export default function Home({ searchParams }: HomeProps) {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <Link href="/auth" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
-              <Smartphone className="w-5 h-5" />
-              SIGN UP AS CUSTOMER
-            </Link>
+            {user ? (
+              <Link href="/dashboard" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                MANAGE MENU
+              </Link>
+            ) : (
+              <Link href="/auth" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
+                <Smartphone className="w-5 h-5" />
+                SIGN UP AS CUSTOMER
+              </Link>
+            )}
             <HomeClient />
           </div>
         </div>
@@ -386,10 +401,17 @@ export default function Home({ searchParams }: HomeProps) {
             their go-to spot for great food and great vibes.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <Link href="/auth" className="bg-white text-orange-600 px-10 py-4 rounded-full font-bold text-xl hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
-              <ShoppingCart className="w-6 h-6" />
-              SIGN UP AS CUSTOMER
-            </Link>
+            {user ? (
+              <Link href="/dashboard" className="bg-white text-orange-600 px-10 py-4 rounded-full font-bold text-xl hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
+                <Settings className="w-6 h-6" />
+                MANAGE MENU
+              </Link>
+            ) : (
+              <Link href="/auth" className="bg-white text-orange-600 px-10 py-4 rounded-full font-bold text-xl hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
+                <ShoppingCart className="w-6 h-6" />
+                SIGN UP AS CUSTOMER
+              </Link>
+            )}
             <HomeClient />
           </div>
           
