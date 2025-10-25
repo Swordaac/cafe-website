@@ -141,6 +141,14 @@ export function Navbar() {
                 ) : user ? (
                   <div className="flex items-center space-x-4">
                     <span className="text-sm text-gray-600">{user.email}</span>
+                    {/* Dashboard button - only show for specific user ID */}
+                    {user.id === 'f1b2f573-61e1-4546-836d-2473901df325' && (
+                      <Link href="/dashboard">
+                        <Button variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50">
+                          Dashboard
+                        </Button>
+                      </Link>
+                    )}
                     <Button variant="outline" onClick={handleSignOut} className="border-orange-600 text-orange-600 hover:bg-orange-50">
                       Sign Out
                     </Button>
@@ -220,6 +228,16 @@ export function Navbar() {
               >
                 Merchandise
               </Link>
+              {/* Dashboard link for mobile - only show for specific user ID */}
+              {user && user.id === 'f1b2f573-61e1-4546-836d-2473901df325' && (
+                <Link 
+                  href="/dashboard" 
+                  className={`block px-3 py-2 transition-colors ${isActive('/dashboard') ? 'text-orange-600 bg-orange-50 font-semibold' : 'text-gray-700 hover:text-orange-600'}`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
             </div>
           </div>
         )}

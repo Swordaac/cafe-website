@@ -61,8 +61,8 @@ export default function AuthPage() {
       if (error) {
         setMessage(`Error: ${error.message}`)
       } else {
-        // Redirect to success page after successful registration
-        router.push('/success')
+        // Redirect to home page after successful registration
+        router.push('/')
       }
     } catch (error) {
       setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
