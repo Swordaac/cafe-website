@@ -10,6 +10,17 @@ export async function signOutUser(): Promise<void> {
   try {
     const supabase = createClient()
     
+    // If there is no active session, skip server sign-out and just clear locally
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        await signOutUserFallback()
+        return
+      }
+    } catch (_) {
+      // If session check fails, continue and rely on fallbacks
+    }
+    
     // Try to sign out from Supabase with a timeout
     const signOutPromise = supabase.auth.signOut()
     const timeoutPromise = new Promise((_, reject) => 
