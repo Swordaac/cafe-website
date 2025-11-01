@@ -25,7 +25,7 @@ export function SimpleMembershipGuard({ children, tenantId, requiredRole = 'view
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const roleHierarchy = { viewer: 1, editor: 2, admin: 3 }
+  const roleHierarchy: Record<'viewer' | 'editor' | 'admin', number> = { viewer: 1, editor: 2, admin: 3 }
 
   useEffect(() => {
     if (user) {
@@ -50,7 +50,7 @@ export function SimpleMembershipGuard({ children, tenantId, requiredRole = 'view
 
       console.log('Making direct API call to check membership...')
       
-      const response = await fetch(`http://localhost:4000/v1/tenants/${tenantId}/memberships`, {
+      const response = await fetch(`https://cafe-website-ce43.onrender.com/v1/tenants/${tenantId}/memberships`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -78,7 +78,7 @@ export function SimpleMembershipGuard({ children, tenantId, requiredRole = 'view
       }
 
       // Check if user has required role level
-      if (roleHierarchy[userMembership.role] < roleHierarchy[requiredRole]) {
+      if (roleHierarchy[userMembership.role as keyof typeof roleHierarchy] < roleHierarchy[requiredRole as keyof typeof roleHierarchy]) {
         setError(`You need ${requiredRole} access or higher to view this page. Your current role: ${userMembership.role}`)
         return
       }
