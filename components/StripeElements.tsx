@@ -11,13 +11,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { CreditCard, CheckCircle, AlertCircle } from 'lucide-react'
 
-// Initialize Stripe with Connect account context so confirmations target the connected account
-const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+// Validate publishable key before using it
+const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+
+if (!publishableKey || typeof publishableKey !== 'string' || publishableKey.trim().length === 0) {
+  console.error('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is missing or invalid')
+}
+
 const connectAccountId = process.env.NEXT_PUBLIC_STRIPE_CONNECT_ACCOUNT_ID
-const stripePromise = loadStripe(
-  publishableKey,
-  connectAccountId ? { stripeAccount: connectAccountId } : undefined
-)
 
 interface StripePaymentFormProps {
   clientSecret: string
@@ -133,9 +134,17 @@ export default function StripeElements({
 }: StripeElementsProps) {
   const [mounted, setMounted] = useState(false)
   const [stripe, setStripe] = useState<any>(null)
+  const [initError, setInitError] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
+    
+    // Validate publishableKey before calling loadStripe
+    if (!publishableKey) {
+      setInitError('Stripe publishable key is not configured')
+      return
+    }
+    
     // Initialize Stripe with the tenant-specific account
     if (stripeAccountId && typeof stripeAccountId === 'string' && stripeAccountId.trim()) {
       loadStripe(
@@ -144,17 +153,44 @@ export default function StripeElements({
       ).then(setStripe).catch(error => {
         console.error('Error loading Stripe with account:', error)
         // Fallback to default initialization
-        loadStripe(publishableKey).then(setStripe)
+        loadStripe(publishableKey).then(setStripe).catch(fallbackError => {
+          console.error('Error loading Stripe (fallback):', fallbackError)
+          setInitError('Failed to initialize Stripe. Please check your configuration.')
+        })
       })
     } else {
       // Fallback to default Stripe initialization if no account ID
       loadStripe(publishableKey).then(setStripe).catch(error => {
         console.error('Error loading Stripe:', error)
+        setInitError('Failed to initialize Stripe. Please check your configuration.')
       })
     }
   }, [stripeAccountId])
 
-  if (!mounted || !stripe) {
+  if (!mounted) {
+    return (
+      <div className="space-y-4">
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+          <div className="h-12 bg-gray-200 rounded"></div>
+        </div>
+        <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
+      </div>
+    )
+  }
+
+  if (initError) {
+    return (
+      <div className="text-center py-8">
+        <AlertCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
+        <h3 className="text-xl font-bold text-gray-800 mb-2">Payment Setup Error</h3>
+        <p className="text-gray-600 mb-4">{initError}</p>
+        <p className="text-sm text-gray-500">Please contact support if this issue persists.</p>
+      </div>
+    )
+  }
+
+  if (!stripe) {
     return (
       <div className="space-y-4">
         <div className="animate-pulse">

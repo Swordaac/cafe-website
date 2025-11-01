@@ -185,16 +185,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setError(null)
 
     try {
-      // Generate idempotency key based on cart contents only (no timestamp)
-      // This allows the same cart to create the same payment intent
-      const sortedItems = cart.items
-        .map(item => `${item.product._id}:${item.quantity}`)
-        .sort()
-        .join('|');
-      
-      const cartHash = btoa(`${sortedItems}-${cart.totalPrice}`)
-        .replace(/[^a-zA-Z0-9]/g, '')
-        .substring(0, 32);
+      // Generate unique idempotency key for each checkout attempt
+      // Stripe requires unique keys per request - this ensures reliability
+      const idempotencyKey = `checkout-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
 
       const response = await customFetch<{ data: { clientSecret: string; id: string; stripeAccountId: string } }>(
         '/payments/intent',
@@ -202,7 +195,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           method: 'POST',
           tenantId: 'Bouchees',
           headers: {
-            'Idempotency-Key': cartHash
+            'Idempotency-Key': idempotencyKey
           },
           body: {
             items: cart.items.map(item => ({
