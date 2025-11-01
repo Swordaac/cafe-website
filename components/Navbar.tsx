@@ -9,6 +9,9 @@ import { signOutUser } from '@/lib/auth-utils'
 import { CartIcon } from '@/components/CartIcon'
 import { Search, Menu, X, Facebook, Instagram, Linkedin, Youtube, Twitter } from 'lucide-react'
 import { useState, useEffect, Suspense } from 'react'
+import { fetchCategories } from '@/lib/api'
+import { Category } from '@/lib/types'
+import { customFetch } from '@/lib/api'
 
 function SearchComponent() {
   const [searchValue, setSearchValue] = useState('')
@@ -33,6 +36,37 @@ export function Navbar() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const tenantId = 'Bouchees'
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setCategoriesLoading(true)
+        const categoriesRes = await customFetch<{ data: Category[] }>(
+          `/tenants/${tenantId}/categories`,
+          { method: 'GET', tenantId }
+        )
+        // Sort by sortOrder if available, otherwise by name
+        const sortedCategories = (categoriesRes.data || []).sort((a, b) => {
+          const orderA = a.sortOrder ?? 999
+          const orderB = b.sortOrder ?? 999
+          if (orderA !== orderB) return orderA - orderB
+          return a.name.localeCompare(b.name)
+        })
+        setCategories(sortedCategories)
+      } catch (error) {
+        console.error('Error loading categories:', error)
+        setCategories([])
+      } finally {
+        setCategoriesLoading(false)
+      }
+    }
+
+    loadCategories()
+  }, [])
 
   const handleSignOut = async () => {
     await signOutUser()
@@ -53,6 +87,8 @@ export function Navbar() {
     return `${baseClasses} ${isActive(path) ? activeClasses : inactiveClasses}`
   }
 
+  // Generate category link - using category ID for the route
+  const getCategoryLink = (categoryId: string) => `/categories/${categoryId}`
 
   return (
     <>
@@ -107,21 +143,23 @@ export function Navbar() {
                 <Link href="/" className={getLinkClasses('/')}>
                   Menu
                 </Link>
-                <Link href="/puffs" className={getLinkClasses('/puffs')}>
-                  Puffs
-                </Link>
-                <Link href="/stuffed-puffs" className={getLinkClasses('/stuffed-puffs')}>
-                  Stuffed Puffs
-                </Link>
-                <Link href="/coffees" className={getLinkClasses('/coffees')}>
-                  Coffees & Teas
-                </Link>
-                <Link href="/ice-cream" className={getLinkClasses('/ice-cream')}>
-                  Ice Cream
-                </Link>
-                <Link href="/merchandise" className={getLinkClasses('/merchandise')}>
-                  Merchandise
-                </Link>
+                {categoriesLoading ? (
+                  <div className="flex space-x-8">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
+                    ))}
+                  </div>
+                ) : (
+                  categories.map((category) => (
+                    <Link
+                      key={category._id}
+                      href={getCategoryLink(category._id)}
+                      className={getLinkClasses(`/categories/${category._id}`)}
+                    >
+                      {category.name}
+                    </Link>
+                  ))
+                )}
               </div>
             </div>
 
@@ -194,41 +232,24 @@ export function Navbar() {
               >
                 Menu
               </Link>
-              <Link 
-                href="/puffs" 
-                className={`block px-3 py-2 transition-colors ${isActive('/puffs') ? 'text-orange-600 bg-orange-50 font-semibold' : 'text-gray-700 hover:text-orange-600'}`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Puffs
-              </Link>
-              <Link 
-                href="/stuffed-puffs" 
-                className={`block px-3 py-2 transition-colors ${isActive('/stuffed-puffs') ? 'text-orange-600 bg-orange-50 font-semibold' : 'text-gray-700 hover:text-orange-600'}`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Stuffed Puffs
-              </Link>
-              <Link 
-                href="/coffees" 
-                className={`block px-3 py-2 transition-colors ${isActive('/coffees') ? 'text-orange-600 bg-orange-50 font-semibold' : 'text-gray-700 hover:text-orange-600'}`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Coffees & Teas
-              </Link>
-              <Link 
-                href="/ice-cream" 
-                className={`block px-3 py-2 transition-colors ${isActive('/ice-cream') ? 'text-orange-600 bg-orange-50 font-semibold' : 'text-gray-700 hover:text-orange-600'}`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Ice Cream
-              </Link>
-              <Link 
-                href="/merchandise" 
-                className={`block px-3 py-2 transition-colors ${isActive('/merchandise') ? 'text-orange-600 bg-orange-50 font-semibold' : 'text-gray-700 hover:text-orange-600'}`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Merchandise
-              </Link>
+              {categoriesLoading ? (
+                <div className="space-y-1">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="h-8 bg-gray-200 rounded animate-pulse mx-3" />
+                  ))}
+                </div>
+              ) : (
+                categories.map((category) => (
+                  <Link
+                    key={category._id}
+                    href={getCategoryLink(category._id)}
+                    className={`block px-3 py-2 transition-colors ${isActive(`/categories/${category._id}`) ? 'text-orange-600 bg-orange-50 font-semibold' : 'text-gray-700 hover:text-orange-600'}`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {category.name}
+                  </Link>
+                ))
+              )}
               {/* Dashboard link for mobile - only show for specific user ID */}
               {user && user.id === 'f1b2f573-61e1-4546-836d-2473901df325' && (
                 <Link 
