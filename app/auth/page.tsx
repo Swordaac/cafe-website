@@ -19,28 +19,29 @@ export default function AuthPage() {
 
   const supabase = createClient()
 
-  useEffect(() => {
-    if (user) {
-      // Redirect to home page after successful login
-      router.push('/')
-    }
-  }, [user, router])
+  // Remove or simplify the useEffect - it's now redundant
+  // useEffect(() => {
+  //   if (user) {
+  //     router.push('/')
+  //   }
+  // }, [user, router])
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setMessage('')
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
       
       if (error) {
         setMessage(`Error: ${error.message}`)
-      } else {
-        setMessage('Signed in successfully!')
-        // User will be redirected automatically by the useEffect hook
+      } else if (data.session) {
+        // Refresh router to trigger middleware redirect
+        router.refresh()
+        router.push('/')
       }
     } catch (error) {
       setMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
