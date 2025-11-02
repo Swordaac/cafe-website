@@ -192,12 +192,7 @@ export default function ProductPage() {
               )}
             </div>
             
-            {/* Image Gallery Placeholder */}
-            <div className="grid grid-cols-4 gap-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="aspect-square bg-gray-200 rounded-lg"></div>
-              ))}
-            </div>
+        
           </div>
 
           {/* Product Details */}
