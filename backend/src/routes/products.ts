@@ -10,6 +10,7 @@ import { resolveTenantStrict } from '../middlewares/tenantStrict.js';
 import { upload } from '../middlewares/upload.js';
 import { cloudinaryService } from '../services/cloudinary.js';
 import fs from 'fs/promises';
+import { Types } from 'mongoose';
 
 export const router = Router({ mergeParams: true });
 
@@ -112,7 +113,14 @@ router.get('/', async (req, res, next) => {
     const { categoryId, search } = req.query as { categoryId?: string; search?: string };
     const filter: any = { tenantId };
     
-    if (categoryId) filter.categoryId = categoryId;
+    // Fix: Convert categoryId string to ObjectId if provided
+    if (categoryId) {
+      // Validate ObjectId format first
+      if (!Types.ObjectId.isValid(categoryId)) {
+        return res.status(400).json({ error: 'Invalid categoryId format' });
+      }
+      filter.categoryId = new Types.ObjectId(categoryId);
+    }
     
     // Add search functionality
     if (search) {
