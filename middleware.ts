@@ -7,6 +7,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Skip middleware for static files (images, fonts, etc.)
+  const pathname = request.nextUrl.pathname
+  const isStaticFile = /\.(png|jpg|jpeg|gif|svg|ico|webp|PNG|JPG|JPEG|GIF|SVG|ICO|WEBP|woff|woff2|ttf|eot)$/i.test(pathname)
+  if (isStaticFile) {
+    return NextResponse.next()
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,

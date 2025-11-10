@@ -130,8 +130,12 @@ export function Navbar() {
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
-                <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-white font-bold text-xl">B</span>
+                <div className="mr-3 rounded-full overflow-hidden w-10 h-10">
+                  <img 
+                    src="/logo.PNG" 
+                    alt="Bouchees Logo" 
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className="text-2xl font-bold text-gray-900">BOUCHEES</span>
               </Link>
@@ -165,10 +169,7 @@ export function Navbar() {
 
             {/* Search and Actions */}
             <div className="flex items-center space-x-4">
-              {/* Search Bar */}
-              <Suspense fallback={<div className="w-64 h-10 bg-gray-200 rounded-full animate-pulse"></div>}>
-                <SearchComponent />
-              </Suspense>
+          
 
               {/* Cart Icon */}
               <CartIcon />

@@ -10,29 +10,45 @@ async function getCategoryData(categoryId: string) {
   try {
     const tenantId = 'Bouchees'
     
-    const [productsRes, categoriesRes] = await Promise.all([
-      customFetch<{ data: Product[] }>(
-        `/tenants/${tenantId}/products?categoryId=${categoryId}`,
-        { method: 'GET', tenantId }
-      ),
-      customFetch<{ data: Category[] }>(
-        `/tenants/${tenantId}/categories`,
-        { method: 'GET', tenantId }
-      )
-    ])
-    
-    const products = productsRes.data || []
+    // Always fetch categories first to resolve the effective category ID
+    const categoriesRes = await customFetch<{ data: Category[] }>(
+      `/tenants/${tenantId}/categories`,
+      { method: 'GET', tenantId }
+    )
     const categories = categoriesRes.data || []
-    const category = categories.find(cat => cat._id === categoryId)
-    
-    if (!category) {
+
+    const raw = decodeURIComponent(categoryId || '').trim()
+    const isLikelyObjectId = /^[a-f\d]{24}$/i.test(raw)
+
+    // Try to resolve by exact ID first (when a valid ObjectId string is used)
+    let resolved = isLikelyObjectId
+      ? categories.find(cat => cat._id === raw)
+      : undefined
+
+    // If not found by ID, try to resolve by name (support slug-like paths)
+    if (!resolved) {
+      const lower = raw.toLowerCase()
+      // Prefer exact name match, then includes
+      resolved = categories.find(cat => cat.name.toLowerCase() === lower)
+        || categories.find(cat => cat.name.toLowerCase().includes(lower))
+    }
+
+    if (!resolved) {
       return null
     }
-    
-    return { 
-      products, 
-      categoryName: category.name,
-      categoryId: category._id
+
+    // Fetch products using the resolved category ID
+    const productsRes = await customFetch<{ data: Product[] }>(
+      `/tenants/${tenantId}/products?categoryId=${resolved._id}`,
+      { method: 'GET', tenantId }
+    )
+
+    const products = productsRes.data || []
+
+    return {
+      products,
+      categoryName: resolved.name,
+      categoryId: resolved._id
     }
   } catch (error) {
     console.error('Error fetching category data:', error)

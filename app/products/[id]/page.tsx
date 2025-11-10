@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
-import { customFetch } from "@/lib/api"
+import { customFetch, fetchProducts } from "@/lib/api"
 import { Product, Category } from "@/lib/types"
 import { formatPrice } from "@/lib/api"
 import { useCart } from "@/contexts/cart"
 import { ArrowLeft, Plus, Minus, Heart, Share2, Star, Clock, MapPin, Phone, ShoppingCart } from 'lucide-react'
+import Link from 'next/link'
 
 export default function ProductPage() {
   const params = useParams()
@@ -17,6 +18,7 @@ export default function ProductPage() {
   
   const [product, setProduct] = useState<Product | null>(null)
   const [category, setCategory] = useState<Category | null>(null)
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
@@ -46,6 +48,17 @@ export default function ProductPage() {
             tenantId: 'Bouchees'
           })
           setCategory(categoryRes.data)
+          
+          // Fetch related products in the same category (excluding current product)
+          try {
+            const related = await fetchProducts('Bouchees', productData.categoryId)
+            // Filter out the current product
+            const filteredRelated = related.filter(p => p._id !== productData._id)
+            setRelatedProducts(filteredRelated.slice(0, 4)) // Show max 4 related products
+          } catch (err) {
+            console.error('Error fetching related products:', err)
+            // Don't fail the page if related products can't be loaded
+          }
         }
         
       } catch (err) {
@@ -200,9 +213,12 @@ export default function ProductPage() {
             {/* Category & Status */}
             <div className="flex items-center space-x-3">
               {category && (
-                <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
+                <Link 
+                  href={`/categories/${product.categoryId}`}
+                  className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium hover:bg-orange-200 transition-colors"
+                >
                   {category.name}
-                </span>
+                </Link>
               )}
               <span className={`px-3 py-1 rounded-full text-sm font-bold ${
                 product.availabilityStatus === 'available' 
@@ -358,6 +374,51 @@ export default function ProductPage() {
             </div>
           </div>
         </div>
+        
+        {/* Related Products Section */}
+        {relatedProducts.length > 0 && category && product && (
+          <div className="mt-16">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-black text-gray-800">
+                More from {category.name}
+              </h2>
+              <Link
+                href={`/categories/${product.categoryId}`}
+                className="text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1"
+              >
+                View All
+                <ArrowLeft className="w-4 h-4 rotate-180" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {relatedProducts.map((relatedProduct) => (
+                <Link
+                  key={relatedProduct._id}
+                  href={`/products/${relatedProduct._id}`}
+                  className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-4"
+                >
+                  {relatedProduct.imageUrl ? (
+                    <img
+                      src={relatedProduct.imageUrl}
+                      alt={relatedProduct.name}
+                      className="w-full aspect-square object-cover rounded-lg mb-3"
+                    />
+                  ) : (
+                    <div className="w-full aspect-square bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
+                      <span className="text-gray-400 text-xs">No Image</span>
+                    </div>
+                  )}
+                  <h3 className="font-bold text-gray-800 text-sm mb-1 line-clamp-2">
+                    {relatedProduct.name}
+                  </h3>
+                  <p className="text-orange-600 font-black">
+                    {formatPrice(relatedProduct.priceCents)}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -90,17 +90,21 @@ export default function Home({ searchParams }: HomeProps) {
       <section
         className="relative h-screen flex items-center justify-center text-center text-white overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%)",
+          backgroundImage: "url('/heroImage.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-600/90 to-orange-500/90"></div>
         <div className="relative z-10 max-w-4xl mx-auto px-6">
           <div className="mb-8">
             {/* Logo/Brand Icon */}
-            <div className="w-24 h-24 bg-white/20 rounded-full mx-auto mb-6 flex items-center justify-center backdrop-blur-sm border-2 border-white/30">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold text-orange-600">B</span>
-              </div>
+            <div className="w-24 h-24 bg-white/20 rounded-full mx-auto mb-6 flex items-center justify-center backdrop-blur-sm border-2 border-white/30 overflow-hidden">
+              <img 
+                src="/logo.PNG" 
+                alt="Bouchees Logo" 
+                className="w-20 h-20 object-cover rounded-full"
+              />
             </div>
             
             {/* Main Headlines */}
@@ -175,21 +179,7 @@ export default function Home({ searchParams }: HomeProps) {
           </div>
         </div>
         
-        <div className="bg-gradient-to-r from-orange-600 to-orange-500 rounded-3xl p-8 text-white">
-          <h3 className="text-2xl md:text-3xl font-bold mb-4">Join the Bouchees Community</h3>
-          <p className="text-lg text-orange-100 mb-6 max-w-2xl mx-auto">
-            More than just a café - we're your go-to spot for study sessions, 
-            hangouts with friends, and those perfect moments you'll remember forever.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-orange-600 px-6 py-3 rounded-full font-bold hover:bg-orange-50 transition-all duration-300">
-              Follow Us @BoucheesCafe
-            </button>
-            <button className="border-2 border-white text-white px-6 py-3 rounded-full font-bold hover:bg-white hover:text-orange-600 transition-all duration-300">
-              Join Our Rewards Program
-            </button>
-          </div>
-        </div>
+        
       </section>
 
       {/* Menu Section */}
@@ -209,33 +199,20 @@ export default function Home({ searchParams }: HomeProps) {
           {/* Category Buttons */}
           <div className="flex flex-wrap justify-center gap-4 mb-12">
             {categories.map((category, index) => (
-              <button
+              <Link
                 key={category._id}
+                href={`/categories/${category._id}`}
                 className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-full font-bold text-lg border-2 border-white/30 hover:bg-white hover:text-orange-600 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
                 style={{
                   animationDelay: `${index * 100}ms`
                 }}
               >
                 {category.name.toUpperCase()}
-              </button>
+              </Link>
             ))}
           </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            {user ? (
-              <Link href="/dashboard" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                MANAGE MENU
-              </Link>
-            ) : (
-              <Link href="/auth" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
-                <Smartphone className="w-5 h-5" />
-                SIGN UP AS CUSTOMER
-              </Link>
-            )}
-            <HomeClient />
-          </div>
+          
         </div>
         
         {/* Decorative Elements */}
