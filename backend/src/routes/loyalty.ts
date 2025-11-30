@@ -32,10 +32,12 @@ router.post(
       // Check if already enrolled
       const existing = await Loyalty.findOne({ userId, tenantId });
       if (existing) {
+        const stampsInCurrentCycle = existing.purchaseCount - existing.lastRedemptionPurchaseCount;
         return res.status(200).json({
           data: {
             enrolled: true,
             purchaseCount: existing.purchaseCount,
+            stampsInCurrentCycle,
             freeProductEligible: existing.freeProductEligible,
             message: 'Already enrolled in loyalty program',
           },
@@ -49,6 +51,7 @@ router.post(
         purchaseCount: 0,
         points: 0,
         freeProductEligible: false,
+        lastRedemptionPurchaseCount: 0,
         enrolledAt: new Date(),
       });
 
@@ -56,6 +59,7 @@ router.post(
         data: {
           enrolled: true,
           purchaseCount: loyalty.purchaseCount,
+          stampsInCurrentCycle: 0,
           freeProductEligible: loyalty.freeProductEligible,
           message: 'Successfully enrolled in loyalty program',
         },
@@ -95,14 +99,17 @@ router.get(
         });
       }
 
+      // Calculate stamps in current cycle
+      const stampsInCurrentCycle = loyalty.purchaseCount - loyalty.lastRedemptionPurchaseCount;
       const purchasesUntilFree = loyalty.freeProductEligible
         ? 0
-        : PURCHASES_FOR_FREE_PRODUCT - (loyalty.purchaseCount % PURCHASES_FOR_FREE_PRODUCT);
+        : PURCHASES_FOR_FREE_PRODUCT - (stampsInCurrentCycle % PURCHASES_FOR_FREE_PRODUCT);
 
       return res.status(200).json({
         data: {
           enrolled: true,
           purchaseCount: loyalty.purchaseCount,
+          stampsInCurrentCycle,
           freeProductEligible: loyalty.freeProductEligible,
           purchasesUntilFree,
           points: loyalty.points,
@@ -138,23 +145,29 @@ router.post(
       }
 
       if (!loyalty.freeProductEligible) {
-        const purchasesUntilFree = PURCHASES_FOR_FREE_PRODUCT - (loyalty.purchaseCount % PURCHASES_FOR_FREE_PRODUCT);
+        const stampsInCurrentCycle = loyalty.purchaseCount - loyalty.lastRedemptionPurchaseCount;
+        const purchasesUntilFree = PURCHASES_FOR_FREE_PRODUCT - (stampsInCurrentCycle % PURCHASES_FOR_FREE_PRODUCT);
         return res.status(400).json({
           error: 'Free product not yet eligible',
           purchasesUntilFree,
+          stampsInCurrentCycle,
         });
       }
 
-      // Reset eligibility
+      // Reset eligibility and start new cycle
       loyalty.freeProductEligible = false;
+      loyalty.lastRedemptionPurchaseCount = loyalty.purchaseCount; // Mark where this cycle ended
       await loyalty.save();
+
+      const stampsInCurrentCycle = loyalty.purchaseCount - loyalty.lastRedemptionPurchaseCount;
 
       return res.status(200).json({
         data: {
           redeemed: true,
           purchaseCount: loyalty.purchaseCount,
+          stampsInCurrentCycle,
           freeProductEligible: loyalty.freeProductEligible,
-          purchasesUntilFree: PURCHASES_FOR_FREE_PRODUCT - (loyalty.purchaseCount % PURCHASES_FOR_FREE_PRODUCT),
+          purchasesUntilFree: PURCHASES_FOR_FREE_PRODUCT - (stampsInCurrentCycle % PURCHASES_FOR_FREE_PRODUCT),
           message: 'Free product redeemed successfully',
         },
       });
@@ -176,8 +189,11 @@ export async function incrementLoyaltyPurchase(userId: string, tenantId: string)
     loyalty.purchaseCount += 1;
     loyalty.lastPurchaseDate = new Date();
 
-    // Check if user has reached the threshold for free product
-    if (loyalty.purchaseCount % PURCHASES_FOR_FREE_PRODUCT === 0) {
+    // Calculate stamps in current cycle (since last redemption)
+    const stampsInCurrentCycle = loyalty.purchaseCount - loyalty.lastRedemptionPurchaseCount;
+
+    // Check if user has reached the threshold for free product in current cycle
+    if (stampsInCurrentCycle > 0 && stampsInCurrentCycle % PURCHASES_FOR_FREE_PRODUCT === 0) {
       loyalty.freeProductEligible = true;
     }
 

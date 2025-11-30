@@ -7,6 +7,7 @@ export interface LoyaltyDocument {
   purchaseCount: number; // Total number of purchases
   points: number; // Current points (can be used for future features)
   freeProductEligible: boolean; // Whether user has earned a free product (every 7 purchases)
+  lastRedemptionPurchaseCount: number; // Purchase count when last redemption occurred (for cycle tracking)
   lastPurchaseDate?: Date;
   enrolledAt: Date;
   createdAt: Date;
@@ -20,6 +21,7 @@ const loyaltySchema = new Schema<LoyaltyDocument>(
     purchaseCount: { type: Number, required: true, default: 0, min: 0 },
     points: { type: Number, required: true, default: 0, min: 0 },
     freeProductEligible: { type: Boolean, required: true, default: false },
+    lastRedemptionPurchaseCount: { type: Number, required: true, default: 0, min: 0 },
     lastPurchaseDate: { type: Date },
     enrolledAt: { type: Date, required: true, default: Date.now },
   },
