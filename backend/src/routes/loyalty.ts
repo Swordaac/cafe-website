@@ -22,7 +22,7 @@ router.post(
   ensureTenantExists,
   async (req, res, next) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.auth?.userId;
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
@@ -76,7 +76,7 @@ router.get(
   ensureTenantExists,
   async (req, res, next) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.auth?.userId;
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
@@ -125,7 +125,7 @@ router.post(
   ensureTenantExists,
   async (req, res, next) => {
     try {
-      const userId = req.user?.id;
+      const userId = req.auth?.userId;
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }

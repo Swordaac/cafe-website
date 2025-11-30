@@ -5,6 +5,7 @@ import { router as products } from './products.js';
 import { router as tenants } from './tenants.js';
 import { router as connect } from './connect.js';
 import { router as payments } from './payments.js';
+import { router as loyalty } from './loyalty.js';
 import { env } from '../config/env.js';
 export const router = Router();
 router.get('/health', (_req, res) => {
@@ -13,6 +14,7 @@ router.get('/health', (_req, res) => {
 router.use('/tenants', tenants);
 router.use('/', connect);
 router.use('/', payments);
+router.use('/', loyalty);
 router.use('/tenants/:tenantId/categories', categories);
 router.use('/tenants/:tenantId/products', products);
 if (env.tenantStrategy === 'path') {

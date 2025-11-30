@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 import { StripeEvent } from '../models/StripeEvent.js';
 import { Tenant } from '../models/Tenant.js';
 import { Transaction } from '../models/Transaction.js';
+import { incrementLoyaltyPurchase } from './loyalty.js';
 export const router = express.Router();
 // Use raw body for signature verification
 router.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -69,6 +70,14 @@ router.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async
                     type: 'payment_intent',
                     metadata: pi.metadata,
                 }, { upsert: true });
+                // Track loyalty purchase if payment succeeded and user is enrolled
+                if (event.type === 'payment_intent.succeeded' && tenantId) {
+                    const userId = pi.metadata?.userId;
+                    const isLoyaltyPurchase = pi.metadata?.loyaltyEnrolled === 'true';
+                    if (userId && isLoyaltyPurchase) {
+                        await incrementLoyaltyPurchase(userId, tenantId);
+                    }
+                }
                 break;
             }
             default:
