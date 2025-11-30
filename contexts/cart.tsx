@@ -10,7 +10,7 @@ interface CartContextType {
   removeFromCart: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
-  createPaymentIntent: (userId?: string) => Promise<PaymentIntent | null>
+  createPaymentIntent: (userId?: string, loyaltyEnrolled?: boolean) => Promise<PaymentIntent | null>
   isLoading: boolean
   error: string | null
 }
@@ -169,7 +169,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR_CART' })
   }
 
-  const createPaymentIntent = useCallback(async (userId?: string): Promise<PaymentIntent | null> => {
+  const createPaymentIntent = useCallback(async (userId?: string, loyaltyEnrolled?: boolean): Promise<PaymentIntent | null> => {
     if (cart.items.length === 0) {
       setError('Cart is empty')
       return null
@@ -194,11 +194,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         totalPrice: cart.totalPrice.toString()
       }
 
-      // Add loyalty metadata if user is enrolled
+      // Always include userId if available (for loyalty tracking)
       if (userId) {
         metadata.userId = userId
-        metadata.loyaltyEnrolled = 'true'
+        // Only set loyaltyEnrolled if user explicitly wants to participate
+        if (loyaltyEnrolled) {
+          metadata.loyaltyEnrolled = 'true'
+        }
       }
+      
+      console.log('[Cart] Creating payment intent with metadata:', {
+        userId: userId || 'not provided',
+        loyaltyEnrolled: loyaltyEnrolled || false,
+        metadata
+      })
 
       const response = await customFetch<{ data: { clientSecret: string; id: string; stripeAccountId: string } }>(
         '/payments/intent',
