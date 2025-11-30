@@ -233,9 +233,15 @@ function CheckoutContent() {
                   </p>
                   {loyaltyStatus && loyaltyStatus.enrolled && (
                     <div className="mt-3 p-3 bg-white rounded-lg border border-orange-200">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-700">Purchases:</span>
-                        <span className="font-bold text-orange-600">{loyaltyStatus.purchaseCount}</span>
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-gray-700">Stamps in current cycle:</span>
+                        <span className="font-bold text-orange-600">
+                          {loyaltyStatus.stampsInCurrentCycle || 0} / 7
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm mb-2">
+                        <span className="text-gray-700">Total purchases:</span>
+                        <span className="font-bold text-gray-800">{loyaltyStatus.purchaseCount}</span>
                       </div>
                       {loyaltyStatus.freeProductEligible ? (
                         <div className="mt-2 p-2 bg-green-100 border border-green-300 rounded text-green-800 text-sm font-medium">

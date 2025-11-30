@@ -179,6 +179,11 @@ export function Navbar() {
                 ) : user ? (
                   <div className="flex items-center space-x-2 lg:space-x-4">
                     <span className="hidden lg:inline text-sm text-gray-600 truncate max-w-[150px]">{user.email}</span>
+                    <Link href="/profile">
+                      <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 text-xs lg:text-sm">
+                        Profile
+                      </Button>
+                    </Link>
                     {/* Dashboard button - only show for specific user ID */}
                     {user.id === 'f1b2f573-61e1-4546-836d-2473901df325' && (
                       <Link href="/dashboard">
@@ -256,6 +261,13 @@ export function Navbar() {
                 ) : user ? (
                   <div className="space-y-1">
                     <div className="px-3 py-2 text-sm text-gray-600 truncate">{user.email}</div>
+                    <Link 
+                      href="/profile" 
+                      className={`block px-3 py-2 transition-colors ${isActive('/profile') ? 'text-orange-600 bg-orange-50 font-semibold' : 'text-gray-700 hover:text-orange-600'}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
                     {user.id === 'f1b2f573-61e1-4546-836d-2473901df325' && (
                       <Link 
                         href="/dashboard" 
