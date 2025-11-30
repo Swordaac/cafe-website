@@ -5,6 +5,13 @@ export interface CategoryDocument {
   tenantId: string;
   name: string;
   sortOrder?: number;
+  imageUrl?: string;
+  imagePublicId?: string;
+  imageMetadata?: {
+    width: number;
+    height: number;
+    format: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -14,6 +21,13 @@ const categorySchema = new Schema<CategoryDocument>(
     tenantId: { type: String, required: true, index: true },
     name: { type: String, required: true },
     sortOrder: { type: Number },
+    imageUrl: { type: String },
+    imagePublicId: { type: String },
+    imageMetadata: {
+      width: { type: Number },
+      height: { type: Number },
+      format: { type: String }
+    },
   },
   { timestamps: true, versionKey: false }
 );

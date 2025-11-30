@@ -83,6 +83,67 @@ class CloudinaryService {
     }
   }
 
+  async uploadCategoryImage(
+    file: Express.Multer.File,
+    tenantId: string,
+    categoryId: string
+  ): Promise<CloudinaryUploadResult> {
+    try {
+      const sanitizedTenantId = this.sanitizeTenantId(tenantId);
+      const folderPath = `tenants/${sanitizedTenantId}/categories`;
+      
+      console.log('=== CLOUDINARY CATEGORY UPLOAD DEBUG ===');
+      console.log('Original tenantId:', tenantId);
+      console.log('Sanitized tenantId:', sanitizedTenantId);
+      console.log('CategoryId:', categoryId);
+      console.log('Folder path:', folderPath);
+      console.log('File path:', file.path);
+      console.log('File size:', file.size);
+      console.log('File mimetype:', file.mimetype);
+
+      const uploadOptions = {
+        upload_preset: 'tenant_products', // Use the same preset
+        public_id: categoryId, // Simple category ID
+        folder: folderPath, // Override the preset's empty asset folder
+        tags: [tenantId, categoryId, 'category'],
+        overwrite: true,
+        invalidate: true,
+      };
+
+      console.log('Upload options:', JSON.stringify(uploadOptions, null, 2));
+
+      const result = await cloudinary.uploader.upload(file.path, uploadOptions);
+
+      console.log('=== UPLOAD RESULT ===');
+      console.log('Public ID:', result.public_id);
+      console.log('Secure URL:', result.secure_url);
+      console.log('Folder:', result.folder);
+      console.log('Asset folder:', result.asset_folder);
+      console.log('Original filename:', result.original_filename);
+      console.log('Format:', result.format);
+      console.log('Width:', result.width);
+      console.log('Height:', result.height);
+      console.log('Bytes:', result.bytes);
+      console.log('Created at:', result.created_at);
+
+      return {
+        publicId: result.public_id,
+        url: result.secure_url,
+        format: result.format,
+        width: result.width,
+        height: result.height,
+      };
+    } catch (error) {
+      console.error('=== CLOUDINARY CATEGORY UPLOAD ERROR ===');
+      console.error('Error details:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      throw new Error('Failed to upload category image to Cloudinary');
+    }
+  }
+
   async deleteImage(publicId: string): Promise<void> {
     try {
       console.log('=== CLOUDINARY DELETE DEBUG ===');
@@ -109,6 +170,19 @@ class CloudinaryService {
     
     // For updates, we'll use the same upload method since we set overwrite: true
     return this.uploadImage(file, tenantId, productId);
+  }
+
+  async updateCategoryImage(
+    file: Express.Multer.File,
+    tenantId: string,
+    categoryId: string
+  ): Promise<CloudinaryUploadResult> {
+    console.log('=== CLOUDINARY CATEGORY UPDATE DEBUG ===');
+    console.log('Updating image for categoryId:', categoryId);
+    console.log('For tenantId:', tenantId);
+    
+    // For updates, we'll use the same upload method since we set overwrite: true
+    return this.uploadCategoryImage(file, tenantId, categoryId);
   }
 
   async getImagesByTenant(tenantId: string): Promise<any> {

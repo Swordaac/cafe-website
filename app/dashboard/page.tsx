@@ -492,6 +492,23 @@ function CategoriesTab({ categories, onRefresh, tenantId, tenantToken }: { categ
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
 
+  const handleDelete = async (category: Category) => {
+    if (!confirm(`Are you sure you want to delete "${category.name}"? This will also remove it from all products.`)) return
+
+    try {
+      await customFetch(`/tenants/${tenantId}/categories/${category._id}`, {
+        method: 'DELETE',
+        auth: true,
+        tenantId,
+        accessTokenOverride: tenantToken || undefined
+      })
+      onRefresh()
+    } catch (error: any) {
+      console.error('Failed to delete category:', error)
+      alert(error.message || 'Failed to delete category')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -508,26 +525,45 @@ function CategoriesTab({ categories, onRefresh, tenantId, tenantToken }: { categ
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {categories.map((category) => (
           <Card key={category._id} className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-lg font-medium text-gray-900">{category.name}</h4>
-                <p className="text-sm text-gray-500">Sort Order: {category.sortOrder || 0}</p>
+            <div className="space-y-4">
+              {/* Category Image */}
+              <div className="w-full h-48 rounded-lg overflow-hidden bg-gray-100">
+                {category.imageUrl ? (
+                  <img
+                    src={category.imageUrl}
+                    alt={category.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Tag className="w-12 h-12 text-gray-400" />
+                  </div>
+                )}
               </div>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditingCategory(category)}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+              
+              {/* Category Info */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900">{category.name}</h4>
+                  <p className="text-sm text-gray-500">Sort Order: {category.sortOrder || 0}</p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingCategory(category)}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                    onClick={() => handleDelete(category)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </Card>

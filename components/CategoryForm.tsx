@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Category } from '@/lib/types'
 import { customFetch } from '@/lib/api'
 import { Button } from '@/components/ui/button'
-import { X } from 'lucide-react'
+import { X, Image as ImageIcon } from 'lucide-react'
 
 interface CategoryFormProps {
   category?: Category | null
@@ -19,6 +19,8 @@ export function CategoryForm({ category, onClose, onSuccess, tenantId, accessTok
     name: '',
     sortOrder: 0
   })
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -28,6 +30,9 @@ export function CategoryForm({ category, onClose, onSuccess, tenantId, accessTok
         name: category.name || '',
         sortOrder: category.sortOrder || 0
       })
+      if (category.imageUrl) {
+        setImagePreview(category.imageUrl)
+      }
     }
   }, [category])
 
@@ -39,12 +44,32 @@ export function CategoryForm({ category, onClose, onSuccess, tenantId, accessTok
     }))
   }
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
 
     try {
+      const formDataToSend = new FormData()
+      formDataToSend.append('name', formData.name)
+      formDataToSend.append('sortOrder', formData.sortOrder.toString())
+      
+      if (imageFile) {
+        formDataToSend.append('image', imageFile)
+      }
+
       const url = category 
         ? `/tenants/${tenantId}/categories/${category._id}`
         : `/tenants/${tenantId}/categories`
@@ -56,7 +81,7 @@ export function CategoryForm({ category, onClose, onSuccess, tenantId, accessTok
         auth: true,
         tenantId,
         accessTokenOverride: accessToken,
-        body: formData
+        body: formDataToSend
       })
 
       onSuccess()
@@ -90,7 +115,7 @@ export function CategoryForm({ category, onClose, onSuccess, tenantId, accessTok
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md">
+      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-medium text-gray-900">
@@ -105,6 +130,41 @@ export function CategoryForm({ category, onClose, onSuccess, tenantId, accessTok
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Image Upload */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category Image
+              </label>
+              <div className="flex items-center space-x-4">
+                <div className="flex-1">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label
+                    htmlFor="image-upload"
+                    className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-orange-500 transition-colors"
+                  >
+                    {imagePreview ? (
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    ) : (
+                      <div className="text-center">
+                        <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-600">Click to upload image</p>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+            </div>
+
             {/* Category Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">

@@ -93,7 +93,7 @@ export function Navbar() {
   return (
     <>
       {/* Top Bar with Social Media and Language */}
-      <div className="bg-orange-600 text-white py-2 px-4">
+      <div className="hidden md:block bg-orange-600 text-white py-2 px-4">
         <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
           <div className="flex items-center space-x-4">
             <span>Language: English</span>
@@ -101,8 +101,8 @@ export function Navbar() {
             <span>Français</span>
           </div>
           <div className="flex items-center space-x-4">
-            <span>Mr. Bouchees Canada</span>
-            <div className="flex items-center space-x-3">
+            <span className="hidden lg:inline">Mr. Bouchees Canada</span>
+            {/* <div className="flex items-center space-x-3">
               <a href="#" className="hover:text-orange-200 transition-colors">
                 <Facebook className="w-4 h-4" />
               </a>
@@ -118,7 +118,7 @@ export function Navbar() {
               <a href="#" className="hover:text-orange-200 transition-colors">
                 <Twitter className="w-4 h-4" />
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
@@ -130,14 +130,14 @@ export function Navbar() {
             {/* Logo */}
             <div className="flex-shrink-0">
               <Link href="/" className="flex items-center">
-                <div className="mr-3 rounded-full overflow-hidden w-10 h-10">
+                <div className="mr-2 md:mr-3 rounded-full overflow-hidden w-8 h-8 md:w-10 md:h-10">
                   <img 
                     src="/logo.PNG" 
                     alt="Bouchees Logo" 
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <span className="text-2xl font-bold text-gray-900">BOUCHEES</span>
+                <span className="text-lg md:text-2xl font-bold text-gray-900">BOUCHEES</span>
               </Link>
             </div>
 
@@ -168,40 +168,38 @@ export function Navbar() {
             </div>
 
             {/* Search and Actions */}
-            <div className="flex items-center space-x-4">
-          
-
+            <div className="flex items-center space-x-2 md:space-x-4">
               {/* Cart Icon */}
               <CartIcon />
 
-              {/* User Actions */}
-              <div className="flex items-center space-x-2">
+              {/* User Actions - Hidden on mobile, shown in mobile menu */}
+              <div className="hidden md:flex items-center space-x-2">
                 {loading ? (
                   <div className="h-9" />
                 ) : user ? (
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-600">{user.email}</span>
+                  <div className="flex items-center space-x-2 lg:space-x-4">
+                    <span className="hidden lg:inline text-sm text-gray-600 truncate max-w-[150px]">{user.email}</span>
                     {/* Dashboard button - only show for specific user ID */}
                     {user.id === 'f1b2f573-61e1-4546-836d-2473901df325' && (
                       <Link href="/dashboard">
-                        <Button variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50">
+                        <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 text-xs lg:text-sm">
                           Dashboard
                         </Button>
                       </Link>
                     )}
-                    <Button variant="outline" onClick={handleSignOut} className="border-orange-600 text-orange-600 hover:bg-orange-50">
+                    <Button variant="outline" size="sm" onClick={handleSignOut} className="border-orange-600 text-orange-600 hover:bg-orange-50 text-xs lg:text-sm">
                       Sign Out
                     </Button>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
                     <Link href="/auth">
-                      <Button variant="outline" className="border-orange-600 text-orange-600 hover:bg-orange-50">
+                      <Button variant="outline" size="sm" className="border-orange-600 text-orange-600 hover:bg-orange-50 text-xs lg:text-sm">
                         Sign In
                       </Button>
                     </Link>
                     <Link href="/auth?mode=signup">
-                      <Button className="bg-orange-600 hover:bg-orange-700">
+                      <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-xs lg:text-sm">
                         Sign Up
                       </Button>
                     </Link>
@@ -251,16 +249,47 @@ export function Navbar() {
                   </Link>
                 ))
               )}
-              {/* Dashboard link for mobile - only show for specific user ID */}
-              {user && user.id === 'f1b2f573-61e1-4546-836d-2473901df325' && (
-                <Link 
-                  href="/dashboard" 
-                  className={`block px-3 py-2 transition-colors ${isActive('/dashboard') ? 'text-orange-600 bg-orange-50 font-semibold' : 'text-gray-700 hover:text-orange-600'}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-              )}
+              {/* User Actions for Mobile */}
+              <div className="border-t border-gray-200 mt-2 pt-2">
+                {loading ? (
+                  <div className="h-8" />
+                ) : user ? (
+                  <div className="space-y-1">
+                    <div className="px-3 py-2 text-sm text-gray-600 truncate">{user.email}</div>
+                    {user.id === 'f1b2f573-61e1-4546-836d-2473901df325' && (
+                      <Link 
+                        href="/dashboard" 
+                        className={`block px-3 py-2 transition-colors ${isActive('/dashboard') ? 'text-orange-600 bg-orange-50 font-semibold' : 'text-gray-700 hover:text-orange-600'}`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => {
+                        handleSignOut()
+                        setIsMenuOpen(false)
+                      }}
+                      className="w-full text-left px-3 py-2 text-gray-700 hover:text-orange-600 transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-2 px-3">
+                    <Link href="/auth" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="outline" className="w-full border-orange-600 text-orange-600 hover:bg-orange-50">
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link href="/auth?mode=signup" onClick={() => setIsMenuOpen(false)}>
+                      <Button className="w-full bg-orange-600 hover:bg-orange-700">
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

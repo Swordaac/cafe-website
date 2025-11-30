@@ -22,6 +22,13 @@ export interface Category {
   tenantId: string;
   name: string;
   sortOrder?: number;
+  imageUrl?: string;
+  imagePublicId?: string;
+  imageMetadata?: {
+    width: number;
+    height: number;
+    format: string;
+  };
   createdAt: string;
   updatedAt: string;
 }

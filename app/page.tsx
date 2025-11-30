@@ -88,7 +88,7 @@ export default function Home({ searchParams }: HomeProps) {
       {/* <DebugEnv /> */}
       {/* Hero Section */}
       <section
-        className="relative h-screen flex items-center justify-center text-center text-white overflow-hidden"
+        className="relative h-[40vh] md:h-[60vh] lg:h-[60vh] flex items-center justify-center text-center text-white overflow-hidden"
         style={{
           backgroundImage: "url('/heroImage.jpg')",
           backgroundSize: "cover",
@@ -123,7 +123,7 @@ export default function Home({ searchParams }: HomeProps) {
             </p>
             
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            {/* <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               {user ? (
                 <Link href="/dashboard" className="bg-white text-orange-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-xl flex items-center gap-2">
                   <Settings className="w-5 h-5" />
@@ -134,7 +134,7 @@ export default function Home({ searchParams }: HomeProps) {
                   SIGN UP AS CUSTOMER
                 </Link>
               )}
-            </div>
+            </div> */}
           </div>
         </div>
         
@@ -144,43 +144,8 @@ export default function Home({ searchParams }: HomeProps) {
         <div className="absolute top-1/3 right-20 w-12 h-12 bg-white/10 rounded-full animate-pulse delay-500"></div>
       </section>
 
-      {/* Description Section */}
-      <section className="py-20 px-6 max-w-6xl mx-auto text-center">
-        <div className="mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
-            Why Students & Young People
-            <span className="block text-orange-600">Love Bouchees</span>
-          </h2>
-        </div>
-        
-        <div className="grid md:grid-cols-3 gap-8 mb-12">
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-            <div className="w-16 h-16 bg-orange-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <Zap className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-3">Lightning Fast</h3>
-            <p className="text-gray-600">Quick service perfect for busy student schedules and study breaks</p>
-          </div>
-          
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-            <div className="w-16 h-16 bg-orange-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <DollarSign className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-3">Student Budget Friendly</h3>
-            <p className="text-gray-600">Delicious food and drinks that won't break your budget</p>
-          </div>
-          
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-            <div className="w-16 h-16 bg-orange-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <Smartphone className="w-8 h-8 text-white" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-800 mb-3">Instagram Worthy</h3>
-            <p className="text-gray-600">Picture-perfect food that's made for your social media feed</p>
-          </div>
-        </div>
-        
-        
-      </section>
+      
+
 
       {/* Menu Section */}
       <section className="bg-gradient-to-br from-orange-600 via-orange-700 to-orange-500 py-20 text-center text-white relative overflow-hidden">
@@ -196,18 +161,42 @@ export default function Home({ searchParams }: HomeProps) {
             </p>
           </div>
 
-          {/* Category Buttons */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
+          {/* Category Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 max-w-6xl mx-auto px-4">
             {categories.map((category, index) => (
               <Link
                 key={category._id}
                 href={`/categories/${category._id}`}
-                className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-full font-bold text-lg border-2 border-white/30 hover:bg-white hover:text-orange-600 transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                className="group relative bg-white/10 backdrop-blur-sm rounded-2xl overflow-hidden border-2 border-white/30 hover:border-white/50 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl"
                 style={{
                   animationDelay: `${index * 100}ms`
                 }}
               >
-                {category.name.toUpperCase()}
+                {/* Category Image */}
+                <div className="relative h-48 sm:h-64 lg:h-80 w-full overflow-hidden">
+                  {category.imageUrl ? (
+                    <img
+                      src={category.imageUrl}
+                      alt={category.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-white/20 flex items-center justify-center">
+                      <div className="text-white/60 text-4xl sm:text-5xl lg:text-6xl font-bold">
+                        {category.name.charAt(0).toUpperCase()}
+                      </div>
+                    </div>
+                  )}
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+                </div>
+                
+                {/* Category Name */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5 lg:p-6">
+                  <h3 className="text-white font-black text-lg sm:text-xl lg:text-2xl xl:text-3xl drop-shadow-lg">
+                    {category.name.toUpperCase()}
+                  </h3>
+                </div>
               </Link>
             ))}
           </div>
@@ -274,6 +263,33 @@ export default function Home({ searchParams }: HomeProps) {
           )}
         </div>
       </section>
+
+      {/* Description Section */}
+<section className="py-20 px-6 max-w-4xl mx-auto text-center leading-relaxed">
+  <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-8">
+    Our Story – <span className="text-orange-600">Bouchées</span>
+  </h2>
+
+  <p className="text-lg text-gray-700 mb-6">
+    Every idea starts with a feeling. For Aziz, the founder of Bouchées, that feeling was joy—the simple kind you experience when you share good food with people you love. It began with a small dream: What if a dessert could bring people together? Not just to eat, but to connect, smile, and make memories.
+  </p>
+
+  <p className="text-lg text-gray-700 mb-6">
+    Bouchées does things differently. Our mini pancakes are made with butter, giving them a soft and comforting texture, just like a homemade treat. For Aziz, quality matters. He believes that when food is made with care, people can taste and feel it too.
+  </p>
+
+  <p className="text-lg text-gray-700 mb-6">
+    This is our second location, and it exists because people believed in us. They came back not only for the pancakes, but for the experience. They laughed, shared boxes, took photos, brought friends, and spread the word. Bouchées started to grow, not just in size, but in community.
+  </p>
+
+  <p className="text-xl font-semibold text-orange-600 mb-8">
+    Spread the Joy.
+  </p>
+
+  <p className="text-lg text-gray-800 font-medium">
+    📍 Come visit us at <span className="font-bold">1455 Rue Guy</span>
+  </p>
+</section>
 
       {/* Customer Testimonials */}
       <section className="py-20 px-6 bg-white">
@@ -377,7 +393,7 @@ export default function Home({ searchParams }: HomeProps) {
             Join thousands of students and young professionals who have made Bouchees 
             their go-to spot for great food and great vibes.
           </p>
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          {/* <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             {user ? (
               <Link href="/dashboard" className="bg-white text-orange-600 px-10 py-4 rounded-full font-bold text-xl hover:bg-orange-50 transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-2">
                 <Settings className="w-6 h-6" />
@@ -390,14 +406,14 @@ export default function Home({ searchParams }: HomeProps) {
               </Link>
             )}
             <HomeClient />
-          </div>
+          </div> */}
           
-          <div className="mt-12 flex justify-center space-x-8 text-orange-200">
+          {/* <div className="mt-12 flex justify-center space-x-8 text-orange-200">
             <a href="#" className="hover:text-white transition-colors duration-300">Instagram</a>
             <a href="#" className="hover:text-white transition-colors duration-300">TikTok</a>
             <a href="#" className="hover:text-white transition-colors duration-300">Facebook</a>
             <a href="#" className="hover:text-white transition-colors duration-300">Twitter</a>
-          </div>
+          </div> */}
         </div>
       </section>
     </div>
