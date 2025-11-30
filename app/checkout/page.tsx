@@ -3,10 +3,11 @@
 import React, { useState, useEffect, Suspense, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useCart } from '@/contexts/cart'
+import { useAuth } from '@/contexts/auth'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { formatPrice } from '@/lib/api'
-import { ArrowLeft, CreditCard, CheckCircle, AlertCircle } from 'lucide-react'
+import { formatPrice, customFetch } from '@/lib/api'
+import { ArrowLeft, CreditCard, CheckCircle, AlertCircle, Gift } from 'lucide-react'
 import Link from 'next/link'
 import StripeElements from '@/components/StripeElements'
 
@@ -14,24 +15,102 @@ function CheckoutContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { cart, clearCart, createPaymentIntent } = useCart()
+  const { user, loading: authLoading } = useAuth()
   const [paymentIntent, setPaymentIntent] = useState<{ id: string; clientSecret: string; stripeAccountId: string } | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'succeeded' | 'failed'>('pending')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [loyaltySelected, setLoyaltySelected] = useState(false)
+  const [loyaltyEnrolled, setLoyaltyEnrolled] = useState(false)
+  const [loyaltyStatus, setLoyaltyStatus] = useState<any>(null)
+  const [isEnrollingLoyalty, setIsEnrollingLoyalty] = useState(false)
   const hasInitializedPayment = useRef(false)
+
+  // Check if returning from auth page
+  useEffect(() => {
+    const returnFromAuth = searchParams.get('returnFromAuth')
+    const loyaltyFromAuth = searchParams.get('loyalty')
+    if (returnFromAuth === 'true' && loyaltyFromAuth === 'true') {
+      setLoyaltySelected(true)
+      // Remove query params
+      router.replace('/checkout', { scroll: false })
+    }
+  }, [searchParams, router])
+
+  // Fetch loyalty status if user is signed in
+  useEffect(() => {
+    const fetchLoyaltyStatus = async () => {
+      if (!user || authLoading) return
+
+      try {
+        const response = await customFetch<{ data: any }>('/loyalty/status', {
+          method: 'GET',
+          tenantId: 'Bouchees',
+          auth: true,
+        })
+        setLoyaltyStatus(response.data)
+        setLoyaltyEnrolled(response.data.enrolled)
+        if (response.data.enrolled) {
+          setLoyaltySelected(true)
+        }
+      } catch (err) {
+        // User might not be enrolled yet, that's okay
+        console.log('Loyalty status not available:', err)
+      }
+    }
+
+    fetchLoyaltyStatus()
+  }, [user, authLoading])
+
+  // Handle loyalty selection
+  const handleLoyaltyToggle = async () => {
+    if (!loyaltySelected) {
+      // User wants to join loyalty program
+      if (!user) {
+        // Redirect to auth with return URL
+        router.push('/auth?returnFromAuth=true&loyalty=true')
+        return
+      }
+
+      // User is signed in, enroll them
+      setIsEnrollingLoyalty(true)
+      try {
+        const response = await customFetch<{ data: any }>('/loyalty/enroll', {
+          method: 'POST',
+          tenantId: 'Bouchees',
+          auth: true,
+        })
+        setLoyaltyEnrolled(true)
+        setLoyaltyStatus(response.data)
+        setLoyaltySelected(true)
+      } catch (err) {
+        setError('Failed to enroll in loyalty program. Please try again.')
+        console.error('Loyalty enrollment error:', err)
+      } finally {
+        setIsEnrollingLoyalty(false)
+      }
+    } else {
+      // User wants to unselect loyalty
+      setLoyaltySelected(false)
+    }
+  }
 
   useEffect(() => {
     const initializePayment = async () => {
-      // Prevent multiple initialization calls
-      if (hasInitializedPayment.current) {
+      // Don't initialize payment if loyalty is selected but user is not signed in
+      if (loyaltySelected && !user && !authLoading) {
         return
       }
+
+      // Reset payment intent when loyalty selection changes
+      hasInitializedPayment.current = false
+      setPaymentIntent(null)
 
       try {
         hasInitializedPayment.current = true
         setIsLoading(true)
-        const intent = await createPaymentIntent()
+        const intent = await createPaymentIntent(loyaltySelected && user ? user.id : undefined)
         if (intent) {
           setPaymentIntent({
             id: intent.id,
@@ -50,7 +129,7 @@ function CheckoutContent() {
     }
 
     initializePayment()
-  }, [createPaymentIntent])
+  }, [createPaymentIntent, loyaltySelected, user, authLoading])
 
   const handlePaymentSuccess = () => {
     setPaymentStatus('succeeded')
@@ -104,12 +183,71 @@ function CheckoutContent() {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Payment Form */}
           <div className="space-y-6">
+            {/* Loyalty Program Option */}
+            <Card className="p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <Gift className="w-8 h-8 text-orange-600" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-bold text-gray-800">Join Our Loyalty Program</h3>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={loyaltySelected}
+                        onChange={handleLoyaltyToggle}
+                        disabled={isEnrollingLoyalty}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    </label>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-3">
+                    Get a free product every 7 purchases! Track your progress and earn rewards.
+                  </p>
+                  {loyaltyStatus && loyaltyStatus.enrolled && (
+                    <div className="mt-3 p-3 bg-white rounded-lg border border-orange-200">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700">Purchases:</span>
+                        <span className="font-bold text-orange-600">{loyaltyStatus.purchaseCount}</span>
+                      </div>
+                      {loyaltyStatus.freeProductEligible ? (
+                        <div className="mt-2 p-2 bg-green-100 border border-green-300 rounded text-green-800 text-sm font-medium">
+                          🎉 You're eligible for a free product!
+                        </div>
+                      ) : (
+                        <div className="mt-2 text-sm text-gray-600">
+                          <span className="font-medium">{loyaltyStatus.purchasesUntilFree}</span> more purchase{loyaltyStatus.purchasesUntilFree !== 1 ? 's' : ''} until your next free product
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {isEnrollingLoyalty && (
+                    <div className="mt-2 text-sm text-orange-700">Enrolling...</div>
+                  )}
+                </div>
+              </div>
+            </Card>
+
             <Card className="p-6">
               <h2 className="text-xl font-bold text-gray-800 mb-6">Payment Information</h2>
               
               {paymentStatus === 'pending' && (
                 <div className="space-y-4">
-                  {isLoading ? (
+                  {loyaltySelected && !user && !authLoading ? (
+                    <div className="text-center py-8">
+                      <AlertCircle className="w-16 h-16 text-orange-600 mx-auto mb-4" />
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Sign In Required</h3>
+                      <p className="text-gray-600 mb-4">Please sign in to join the loyalty program and continue checkout.</p>
+                      <Button
+                        onClick={() => router.push('/auth?returnFromAuth=true&loyalty=true')}
+                        className="bg-orange-600 hover:bg-orange-700 text-white"
+                      >
+                        Sign In
+                      </Button>
+                    </div>
+                  ) : isLoading ? (
                     <div className="space-y-4">
                       <div className="animate-pulse">
                         <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>

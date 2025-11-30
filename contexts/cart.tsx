@@ -10,7 +10,7 @@ interface CartContextType {
   removeFromCart: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
-  createPaymentIntent: () => Promise<PaymentIntent | null>
+  createPaymentIntent: (userId?: string) => Promise<PaymentIntent | null>
   isLoading: boolean
   error: string | null
 }
@@ -169,7 +169,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR_CART' })
   }
 
-  const createPaymentIntent = useCallback(async (): Promise<PaymentIntent | null> => {
+  const createPaymentIntent = useCallback(async (userId?: string): Promise<PaymentIntent | null> => {
     if (cart.items.length === 0) {
       setError('Cart is empty')
       return null
@@ -189,6 +189,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // Stripe requires unique keys per request - this ensures reliability
       const idempotencyKey = `checkout-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
 
+      const metadata: Record<string, string> = {
+        totalItems: cart.totalItems.toString(),
+        totalPrice: cart.totalPrice.toString()
+      }
+
+      // Add loyalty metadata if user is enrolled
+      if (userId) {
+        metadata.userId = userId
+        metadata.loyaltyEnrolled = 'true'
+      }
+
       const response = await customFetch<{ data: { clientSecret: string; id: string; stripeAccountId: string } }>(
         '/payments/intent',
         {
@@ -204,10 +215,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             })),
             currency: 'usd',
             description: `Order for ${cart.totalItems} item(s) from Bouchees`,
-            metadata: {
-              totalItems: cart.totalItems.toString(),
-              totalPrice: cart.totalPrice.toString()
-            }
+            metadata
           }
         }
       )

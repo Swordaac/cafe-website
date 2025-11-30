@@ -99,14 +99,14 @@ export default function Home({ searchParams }: HomeProps) {
         <div className="relative z-10 max-w-4xl mx-auto px-6">
           <div className="mb-8">
             {/* Logo/Brand Icon */}
-            <div className="w-24 h-24 bg-white/20 rounded-full mx-auto mb-6 flex items-center justify-center backdrop-blur-sm border-2 border-white/30 overflow-hidden">
+            {/* <div className="w-24 h-24 bg-white/20 rounded-full mx-auto mb-6 flex items-center justify-center backdrop-blur-sm border-2 border-white/30 overflow-hidden">
               <img 
                 src="/logo.PNG" 
                 alt="Bouchees Logo" 
                 className="w-20 h-20 object-cover rounded-full"
               />
             </div>
-            
+             */}
             {/* Main Headlines */}
             <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-2 drop-shadow-lg">
               BOUCHEES

@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Mail, Lock, User, Heart, Star, Coffee, ArrowRight } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function AuthPage() {
+function AuthPageContent() {
   const { user, loading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -16,15 +16,24 @@ export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const supabase = createClient()
 
-  // Remove or simplify the useEffect - it's now redundant
-  // useEffect(() => {
-  //   if (user) {
-  //     router.push('/')
-  //   }
-  // }, [user, router])
+  // Handle redirect after successful auth
+  useEffect(() => {
+    if (user && !loading) {
+      const returnFromAuth = searchParams.get('returnFromAuth')
+      const loyalty = searchParams.get('loyalty')
+      if (returnFromAuth === 'true') {
+        if (loyalty === 'true') {
+          router.push('/checkout?returnFromAuth=true&loyalty=true')
+        } else {
+          router.push('/')
+        }
+      }
+    }
+  }, [user, loading, searchParams, router])
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -270,5 +279,20 @@ export default function AuthPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-orange-600 font-medium">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AuthPageContent />
+    </Suspense>
   )
 }

@@ -55,7 +55,7 @@ export async function middleware(request: NextRequest) {
         !request.nextUrl.pathname.startsWith('/auth') && 
         !request.nextUrl.pathname.startsWith('/return') && 
         !request.nextUrl.pathname.startsWith('/refresh') &&
-        !request.nextUrl.pathname.startsWith('/dashboard')) {
+        !request.nextUrl.pathname.startsWith('/') ) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/auth'
       return NextResponse.redirect(redirectUrl)

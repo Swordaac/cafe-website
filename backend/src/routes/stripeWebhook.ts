@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 import { StripeEvent } from '../models/StripeEvent.js';
 import { Tenant } from '../models/Tenant.js';
 import { Transaction } from '../models/Transaction.js';
+import { incrementLoyaltyPurchase } from './loyalty.js';
 
 export const router = express.Router();
 
@@ -82,6 +83,15 @@ router.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async
           },
           { upsert: true }
         );
+
+        // Track loyalty purchase if payment succeeded and user is enrolled
+        if (event.type === 'payment_intent.succeeded' && tenantId) {
+          const userId = pi.metadata?.userId as string | undefined;
+          const isLoyaltyPurchase = pi.metadata?.loyaltyEnrolled === 'true';
+          if (userId && isLoyaltyPurchase) {
+            await incrementLoyaltyPurchase(userId, tenantId);
+          }
+        }
         break;
       }
       default:
