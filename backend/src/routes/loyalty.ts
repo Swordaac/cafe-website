@@ -180,12 +180,24 @@ router.post(
 // Increment purchase count (called from webhook)
 export async function incrementLoyaltyPurchase(userId: string, tenantId: string): Promise<void> {
   try {
+    console.log('[Loyalty] Incrementing purchase for:', { userId, tenantId });
+    
     const loyalty = await Loyalty.findOne({ userId, tenantId });
     if (!loyalty) {
+      console.log('[Loyalty] User not enrolled, skipping increment:', { userId, tenantId });
       // User not enrolled, skip
       return;
     }
 
+    console.log('[Loyalty] Found loyalty record:', {
+      userId,
+      tenantId,
+      currentPurchaseCount: loyalty.purchaseCount,
+      currentPoints: loyalty.points,
+      freeProductEligible: loyalty.freeProductEligible,
+    });
+
+    const oldPurchaseCount = loyalty.purchaseCount;
     loyalty.purchaseCount += 1;
     loyalty.lastPurchaseDate = new Date();
 
@@ -195,11 +207,21 @@ export async function incrementLoyaltyPurchase(userId: string, tenantId: string)
     // Check if user has reached the threshold for free product in current cycle
     if (stampsInCurrentCycle > 0 && stampsInCurrentCycle % PURCHASES_FOR_FREE_PRODUCT === 0) {
       loyalty.freeProductEligible = true;
+      console.log('[Loyalty] User is now eligible for free product!');
     }
 
     await loyalty.save();
+    
+    console.log('[Loyalty] Successfully updated:', {
+      userId,
+      tenantId,
+      oldPurchaseCount,
+      newPurchaseCount: loyalty.purchaseCount,
+      stampsInCurrentCycle,
+      freeProductEligible: loyalty.freeProductEligible,
+    });
   } catch (error) {
-    console.error('Error incrementing loyalty purchase:', error);
+    console.error('[Loyalty] Error incrementing loyalty purchase:', error);
     // Don't throw - we don't want to fail the webhook if loyalty update fails
   }
 }

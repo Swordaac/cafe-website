@@ -53,6 +53,7 @@ function CheckoutContent() {
         setLoyaltyStatus(response.data)
         setLoyaltyEnrolled(response.data.enrolled)
         if (response.data.enrolled) {
+          console.log('[Checkout] User is enrolled, setting loyaltySelected to true')
           setLoyaltySelected(true)
         }
       } catch (err) {
@@ -84,7 +85,11 @@ function CheckoutContent() {
         })
         setLoyaltyEnrolled(true)
         setLoyaltyStatus(response.data)
+        console.log('[Checkout] User enrolled in loyalty, setting loyaltySelected to true')
         setLoyaltySelected(true)
+        // Force payment intent recreation by clearing the current one
+        hasInitializedPayment.current = false
+        setPaymentIntent(null)
       } catch (err) {
         setError('Failed to enroll in loyalty program. Please try again.')
         console.error('Loyalty enrollment error:', err)
@@ -93,7 +98,11 @@ function CheckoutContent() {
       }
     } else {
       // User wants to unselect loyalty
+      console.log('[Checkout] User unselected loyalty, setting loyaltySelected to false')
       setLoyaltySelected(false)
+      // Force payment intent recreation
+      hasInitializedPayment.current = false
+      setPaymentIntent(null)
     }
   }
 
@@ -101,6 +110,14 @@ function CheckoutContent() {
     const initializePayment = async () => {
       // Don't initialize payment if loyalty is selected but user is not signed in
       if (loyaltySelected && !user && !authLoading) {
+        console.log('[Checkout] Skipping payment init: loyalty selected but user not signed in')
+        return
+      }
+
+      // Wait a bit for loyalty status to be fetched if user is logged in
+      // This ensures loyaltySelected is set correctly before creating payment intent
+      if (user && !authLoading && loyaltyStatus === null) {
+        console.log('[Checkout] Waiting for loyalty status to be fetched...')
         return
       }
 
@@ -114,12 +131,24 @@ function CheckoutContent() {
         lastLoyaltyState.current.selected !== currentLoyaltyState.selected ||
         lastLoyaltyState.current.userId !== currentLoyaltyState.userId
 
+      console.log('[Checkout] Payment init check:', {
+        needsReinit,
+        hasInitialized: hasInitializedPayment.current,
+        loyaltySelected,
+        previousLoyaltySelected: lastLoyaltyState.current.selected,
+        userId: user?.id,
+        previousUserId: lastLoyaltyState.current.userId,
+        loyaltyStatusLoaded: loyaltyStatus !== null
+      })
+
       if (!needsReinit && paymentIntent) {
+        console.log('[Checkout] Payment intent already initialized, skipping')
         return // Already initialized with current state
       }
 
       // Prevent multiple simultaneous calls
       if (hasInitializedPayment.current) {
+        console.log('[Checkout] Payment intent creation already in progress, skipping')
         return
       }
 
@@ -128,7 +157,22 @@ function CheckoutContent() {
         setIsLoading(true)
         setPaymentIntent(null) // Clear old intent before creating new one
         
-        const intent = await createPaymentIntent(loyaltySelected && user ? user.id : undefined)
+        // Pass userId and loyaltyEnrolled status to ensure metadata is set correctly
+        console.log('[Checkout] Creating payment intent with:', {
+          userId: user?.id || 'not logged in',
+          loyaltySelected,
+          loyaltyEnrolled,
+          userEnrolled: loyaltyStatus?.enrolled
+        })
+        
+        const intent = await createPaymentIntent(user?.id, loyaltySelected)
+        
+        console.log('[Checkout] Payment intent created:', {
+          intentId: intent?.id,
+          userId: user?.id || 'not logged in',
+          loyaltySelected,
+          hasIntent: !!intent
+        })
         if (intent) {
           setPaymentIntent({
             id: intent.id,
@@ -154,7 +198,7 @@ function CheckoutContent() {
       initializePayment()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loyaltySelected, user?.id, authLoading]) // Only re-init when loyalty or user changes
+  }, [loyaltySelected, user?.id, authLoading, loyaltyStatus]) // Re-init when loyalty status changes too
 
   const handlePaymentSuccess = () => {
     setPaymentStatus('succeeded')

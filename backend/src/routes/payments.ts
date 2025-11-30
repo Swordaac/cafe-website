@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authSupabase } from '../middlewares/authSupabase.js';
 import { resolveTenant } from '../middlewares/tenant.js';
-import { stripe, getPlatformFeeBps, computeApplicationFeeAmount, getDefaultCurrency } from '../services/stripe.js';
+import { stripe, getPlatformFeeBps, computeApplicationFeeAmount, getDefaultCurrency, getStripeAccountId } from '../services/stripe.js';
 import { Tenant } from '../models/Tenant.js';
 import { Transaction } from '../models/Transaction.js';
 import { Product } from '../models/Product.js';
@@ -9,6 +9,7 @@ import { ensureTenantExists } from '../middlewares/membership.js';
 import { resolveTenantStrict } from '../middlewares/tenantStrict.js';
 import { createTenantRateLimiter } from '../middlewares/rateLimit.js';
 import { auditLog } from '../middlewares/auditLog.js';
+import { env } from '../config/env.js';
 
 export const router = Router();
 const tenantRateLimiter = createTenantRateLimiter();
@@ -22,9 +23,16 @@ router.post('/payments/intent', resolveTenant, auditLog, tenantRateLimiter, ensu
     }
 
     const tenantId = req.tenant!.id;
-    const tenant = await Tenant.findById(tenantId).lean();
-    if (!tenant?.stripe?.accountId || !tenant.stripe.chargesEnabled) {
-      return res.status(400).json({ error: 'Tenant is not ready to accept payments' });
+    
+    // Get Stripe account ID (hardcoded in dev, from DB in prod)
+    const stripeAccountId = await getStripeAccountId(tenantId);
+    
+    // In development, skip the chargesEnabled check since we're using a test account
+    if (env.nodeEnv === 'production') {
+      const tenant = await Tenant.findById(tenantId).lean();
+      if (!tenant?.stripe?.accountId || !tenant.stripe.chargesEnabled) {
+        return res.status(400).json({ error: 'Tenant is not ready to accept payments' });
+      }
     }
 
     const { items, currency, description, metadata } = req.body ?? {};
@@ -98,25 +106,40 @@ router.post('/payments/intent', resolveTenant, auditLog, tenantRateLimiter, ensu
 
     let pi;
     try {
+      const paymentMetadata = { 
+        ...metadata, 
+        tenantId,
+        items: JSON.stringify(items.map(item => ({ productId: item.productId, quantity: item.quantity }))), // Store only essential item data
+        totalItems: items.length.toString()
+      };
+      
+      console.log('[Payment] Creating payment intent with metadata:', {
+        tenantId,
+        metadata: paymentMetadata,
+        hasUserId: !!metadata?.userId,
+        hasLoyaltyEnrolled: !!metadata?.loyaltyEnrolled,
+      });
+      
       pi = await stripe.paymentIntents.create(
         {
           amount: totalAmount,
           currency: finalCurrency,
           description: description || `Order for ${items.length} item(s) from ${tenantId}`,
-          metadata: { 
-            ...metadata, 
-            tenantId,
-            items: JSON.stringify(items.map(item => ({ productId: item.productId, quantity: item.quantity }))), // Store only essential item data
-            totalItems: items.length.toString()
-          },
+          metadata: paymentMetadata,
           application_fee_amount: fee,
           automatic_payment_methods: { enabled: true },
         },
         {
           idempotencyKey,
-          stripeAccount: tenant.stripe.accountId,
+          stripeAccount: stripeAccountId,
         }
       );
+      
+      console.log('[Payment] Payment intent created:', {
+        id: pi.id,
+        status: pi.status,
+        metadata: pi.metadata,
+      });
     } catch (stripeError: any) {
       console.error('Stripe error:', stripeError);
       return res.status(400).json({ 
@@ -133,7 +156,7 @@ router.post('/payments/intent', resolveTenant, auditLog, tenantRateLimiter, ensu
         amount: pi.amount,
         currency: pi.currency,
         applicationFeeAmount: fee,
-        stripeAccountId: tenant.stripe.accountId,
+        stripeAccountId: stripeAccountId,
         status: pi.status as any,
         type: 'payment_intent',
         metadata: pi.metadata as any,
@@ -145,7 +168,7 @@ router.post('/payments/intent', resolveTenant, auditLog, tenantRateLimiter, ensu
       data: { 
         clientSecret: pi.client_secret, 
         id: pi.id,
-        stripeAccountId: tenant.stripe.accountId
+        stripeAccountId: stripeAccountId
       } 
     });
   } catch (error) {
@@ -217,13 +240,10 @@ router.post('/payments/intent/:paymentIntentId/cancel', authSupabase, resolveTen
       return res.status(404).json({ error: 'Payment intent not found' });
     }
     
-    const tenant = await Tenant.findById(tenantId).lean();
-    if (!tenant?.stripe?.accountId) {
-      return res.status(400).json({ error: 'Tenant not configured for payments' });
-    }
+    const stripeAccountId = await getStripeAccountId(tenantId);
     
     const pi = await stripe.paymentIntents.cancel(paymentIntentId, {
-      stripeAccount: tenant.stripe.accountId
+      stripeAccount: stripeAccountId
     });
     
     // Update transaction status

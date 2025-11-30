@@ -86,7 +86,19 @@ Create `.env` based on:
 ```
 PORT=4000
 NODE_ENV=development
+
+# MongoDB Configuration
+MONGODB_URI_LOCAL=mongodb://localhost:27017/cafe-website-local
 MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/cafe_app?retryWrites=true&w=majority
+
+# Stripe (TEST Keys for local development)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_APP_FEE_BPS=1000
+STRIPE_DEFAULT_CURRENCY=usd
+# Test account ID (used in development instead of fetching from database)
+STRIPE_TEST_ACCOUNT_ID=acct_1SFgpED8TJhQz6vX
+
 SUPABASE_JWT_SECRET=your_supabase_jwt_secret
 ALLOWED_ORIGINS=http://localhost:3000
 TENANT_STRATEGY=header

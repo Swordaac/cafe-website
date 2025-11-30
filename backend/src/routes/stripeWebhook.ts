@@ -88,8 +88,30 @@ router.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async
         if (event.type === 'payment_intent.succeeded' && tenantId) {
           const userId = pi.metadata?.userId as string | undefined;
           const isLoyaltyPurchase = pi.metadata?.loyaltyEnrolled === 'true';
+          
+          console.log('[Webhook] Payment Intent Succeeded:', {
+            paymentIntentId: pi.id,
+            tenantId,
+            userId,
+            loyaltyEnrolled: pi.metadata?.loyaltyEnrolled,
+            isLoyaltyPurchase,
+            allMetadata: pi.metadata,
+          });
+          
           if (userId && isLoyaltyPurchase) {
-            await incrementLoyaltyPurchase(userId, tenantId);
+            console.log('[Webhook] Attempting to increment loyalty purchase for:', { userId, tenantId });
+            try {
+              await incrementLoyaltyPurchase(userId, tenantId);
+              console.log('[Webhook] Successfully incremented loyalty purchase');
+            } catch (error) {
+              console.error('[Webhook] Error incrementing loyalty purchase:', error);
+            }
+          } else {
+            console.log('[Webhook] Skipping loyalty increment:', {
+              reason: !userId ? 'No userId in metadata' : !isLoyaltyPurchase ? 'loyaltyEnrolled is not "true"' : 'unknown',
+              userId: userId || 'missing',
+              loyaltyEnrolled: pi.metadata?.loyaltyEnrolled || 'missing',
+            });
           }
         }
         break;

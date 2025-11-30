@@ -27,7 +27,8 @@
     "test:rate-limit-ts": "tsx scripts/test-rate-limit.ts",
     "test:rate-limit-quick": "node scripts/quick-rate-test.js",
     "cleanup:migrate": "tsx scripts/cleanup-and-migrate.ts",
-    "create-membership": "tsx scripts/create-test-membership.ts"
+    "create-membership": "tsx scripts/create-test-membership.ts",
+    "debug:loyalty": "tsx scripts/debug-loyalty.ts"
   },
   "dependencies": {
     "cloudinary": "^2.7.0",
