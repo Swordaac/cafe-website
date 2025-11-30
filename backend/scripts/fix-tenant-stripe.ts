@@ -1,13 +1,20 @@
 import { config } from 'dotenv';
-import { MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
 import Stripe from 'stripe';
 import { Tenant } from '../src/models/Tenant.js';
 
 // Load environment variables
 config({ path: '.env' });
+if (!process.env.STRIPE_SECRET_KEY) {
+  config({ path: '../.env.local' });
+}
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const MONGODB_URI = process.env.MONGODB_URI;
+
+if (STRIPE_SECRET_KEY) {
+  console.log(`🔑 Loaded Stripe Key: ${STRIPE_SECRET_KEY.slice(0, 8)}...${STRIPE_SECRET_KEY.slice(-4)}`);
+}
 
 if (!STRIPE_SECRET_KEY) {
   console.error('❌ STRIPE_SECRET_KEY is required');
@@ -29,8 +36,7 @@ async function fixTenantStripe() {
   try {
     // Connect to MongoDB
     console.log('📡 Connecting to MongoDB...');
-    const client = new MongoClient(MONGODB_URI);
-    await client.connect();
+    await mongoose.connect(MONGODB_URI);
     console.log('✅ Connected to MongoDB\n');
 
     // List all tenants
@@ -50,17 +56,22 @@ async function fixTenantStripe() {
     console.log('');
 
     // Ask user to select tenant to fix
-    const readline = await import('readline');
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-
-    const tenantId = await new Promise<string>((resolve) => {
-      rl.question('Enter tenant ID to fix (or press Enter to create new): ', (answer) => {
-        resolve(answer.trim());
+    let tenantId = process.argv[2];
+    
+    if (!tenantId) {
+      const readline = await import('readline');
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
       });
-    });
+
+      tenantId = await new Promise<string>((resolve) => {
+        rl.question('Enter tenant ID to fix (or press Enter to create new): ', (answer) => {
+          resolve(answer.trim());
+          rl.close();
+        });
+      });
+    }
 
     let tenant;
     if (tenantId) {
@@ -152,8 +163,11 @@ async function fixTenantStripe() {
     console.log('2. Use this tenant ID in your frontend requests');
     console.log('3. Test payments after account verification');
 
-    rl.close();
-    await client.close();
+    // Only close if we created it
+    if (!process.argv[2]) {
+        // rl was closed above
+    }
+    await mongoose.disconnect();
 
   } catch (error) {
     console.error('❌ Fix failed:', error);

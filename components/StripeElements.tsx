@@ -120,7 +120,7 @@ interface StripeElementsProps {
   onError: (error: string) => void
   isProcessing: boolean
   setIsProcessing: (processing: boolean) => void
-  stripeAccountId: string
+  stripeAccountId?: string
 }
 
 export default function StripeElements({ 

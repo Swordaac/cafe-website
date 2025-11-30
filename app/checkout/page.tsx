@@ -16,7 +16,7 @@ function CheckoutContent() {
   const router = useRouter()
   const { cart, clearCart, createPaymentIntent } = useCart()
   const { user, loading: authLoading } = useAuth()
-  const [paymentIntent, setPaymentIntent] = useState<{ id: string; clientSecret: string; stripeAccountId: string } | null>(null)
+  const [paymentIntent, setPaymentIntent] = useState<{ id: string; clientSecret: string; stripeAccountId?: string } | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'succeeded' | 'failed'>('pending')
   const [error, setError] = useState<string | null>(null)
@@ -26,6 +26,7 @@ function CheckoutContent() {
   const [loyaltyStatus, setLoyaltyStatus] = useState<any>(null)
   const [isEnrollingLoyalty, setIsEnrollingLoyalty] = useState(false)
   const hasInitializedPayment = useRef(false)
+  const lastLoyaltyState = useRef<{ selected: boolean; userId?: string }>({ selected: false })
 
   // Check if returning from auth page
   useEffect(() => {
@@ -103,13 +104,30 @@ function CheckoutContent() {
         return
       }
 
-      // Reset payment intent when loyalty selection changes
-      hasInitializedPayment.current = false
-      setPaymentIntent(null)
+      // Check if we need to re-initialize (only if loyalty state or user changed)
+      const currentLoyaltyState = {
+        selected: loyaltySelected,
+        userId: user?.id
+      }
+      const needsReinit = 
+        !hasInitializedPayment.current ||
+        lastLoyaltyState.current.selected !== currentLoyaltyState.selected ||
+        lastLoyaltyState.current.userId !== currentLoyaltyState.userId
+
+      if (!needsReinit && paymentIntent) {
+        return // Already initialized with current state
+      }
+
+      // Prevent multiple simultaneous calls
+      if (hasInitializedPayment.current) {
+        return
+      }
 
       try {
         hasInitializedPayment.current = true
         setIsLoading(true)
+        setPaymentIntent(null) // Clear old intent before creating new one
+        
         const intent = await createPaymentIntent(loyaltySelected && user ? user.id : undefined)
         if (intent) {
           setPaymentIntent({
@@ -117,10 +135,13 @@ function CheckoutContent() {
             clientSecret: intent.clientSecret,
             stripeAccountId: intent.stripeAccountId
           })
+          lastLoyaltyState.current = currentLoyaltyState
         } else {
+          hasInitializedPayment.current = false // Reset on failure
           setError('Failed to create payment intent')
         }
       } catch (err) {
+        hasInitializedPayment.current = false // Reset on error
         setError('Failed to initialize payment')
         console.error('Payment initialization error:', err)
       } finally {
@@ -128,8 +149,12 @@ function CheckoutContent() {
       }
     }
 
-    initializePayment()
-  }, [createPaymentIntent, loyaltySelected, user, authLoading])
+    // Only initialize when auth is ready
+    if (!authLoading) {
+      initializePayment()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loyaltySelected, user?.id, authLoading]) // Only re-init when loyalty or user changes
 
   const handlePaymentSuccess = () => {
     setPaymentStatus('succeeded')
@@ -263,7 +288,7 @@ function CheckoutContent() {
                       onError={handlePaymentError}
                       isProcessing={isProcessing}
                       setIsProcessing={setIsProcessing}
-                      stripeAccountId={paymentIntent.stripeAccountId || undefined}
+                      stripeAccountId={paymentIntent.stripeAccountId}
                     />
                   ) : (
                     <div className="text-center py-8">

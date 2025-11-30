@@ -57,7 +57,7 @@ export interface PaymentIntent {
   amount: number;
   currency: string;
   status: string;
-  stripeAccountId: string;
+  stripeAccountId?: string;
 }
 
 
