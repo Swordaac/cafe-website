@@ -22,7 +22,8 @@ export function ProductForm({ product, categories, onClose, onSuccess, tenantId,
     description: '',
     priceCents: '',
     categoryId: '',
-    availabilityStatus: 'available' as 'available' | 'unavailable'
+    availabilityStatus: 'available' as 'available' | 'unavailable' | 'archived',
+    isBoucheesProduct: false
   })
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -36,7 +37,8 @@ export function ProductForm({ product, categories, onClose, onSuccess, tenantId,
         description: product.description || '',
         priceCents: product.priceCents ? (product.priceCents / 100).toString() : '',
         categoryId: product.categoryId || '',
-        availabilityStatus: product.availabilityStatus || 'available'
+        availabilityStatus: product.availabilityStatus || 'available',
+        isBoucheesProduct: product.isBoucheesProduct || false
       })
       if (product.imageUrl) {
         setImagePreview(product.imageUrl)
@@ -45,10 +47,11 @@ export function ProductForm({ product, categories, onClose, onSuccess, tenantId,
   }, [product])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
+    const { name, value, type } = e.target
+    const checked = (e.target as HTMLInputElement).checked
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }))
   }
 
@@ -75,6 +78,7 @@ export function ProductForm({ product, categories, onClose, onSuccess, tenantId,
       formDataToSend.append('description', formData.description)
       formDataToSend.append('priceCents', (parseFloat(formData.priceCents) * 100).toString())
       formDataToSend.append('availabilityStatus', formData.availabilityStatus)
+      formDataToSend.append('isBoucheesProduct', formData.isBoucheesProduct.toString())
       
       if (formData.categoryId) {
         formDataToSend.append('categoryId', formData.categoryId)
@@ -267,7 +271,27 @@ export function ProductForm({ product, categories, onClose, onSuccess, tenantId,
               >
                 <option value="available">Available</option>
                 <option value="unavailable">Unavailable</option>
+                <option value="archived">Archived</option>
               </select>
+            </div>
+
+            {/* Bouchees Product Checkbox */}
+            <div>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="isBoucheesProduct"
+                  checked={formData.isBoucheesProduct}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Bouchees Product
+                </span>
+              </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                Check this box to mark this product as a Bouchees product
+              </p>
             </div>
 
             {/* Error Message */}

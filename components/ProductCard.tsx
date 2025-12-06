@@ -47,16 +47,23 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
         
         {/* Status Badge */}
-        {product.availabilityStatus === 'available' && (
-          <div className="absolute top-4 left-4 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-            AVAILABLE
-          </div>
-        )}
-        {product.availabilityStatus === 'unavailable' && (
-          <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-            SOLD OUT
-          </div>
-        )}
+        <div className="absolute top-4 left-4 flex flex-col gap-2">
+          {product.availabilityStatus === 'available' && (
+            <div className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+              AVAILABLE
+            </div>
+          )}
+          {product.availabilityStatus === 'unavailable' && (
+            <div className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+              SOLD OUT
+            </div>
+          )}
+          {product.isBoucheesProduct && (
+            <div className="bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+              BOUCHEES
+            </div>
+          )}
+        </div>
       </div>
       
       <div className="p-6">

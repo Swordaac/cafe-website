@@ -13,6 +13,7 @@ export interface Product {
     format: string;
   };
   availabilityStatus: 'available' | 'unavailable' | 'archived';
+  isBoucheesProduct: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -44,6 +44,7 @@ router.post('/',
       const priceCents = req.body.priceCents ? parseInt(req.body.priceCents, 10) : undefined;
       const categoryId = req.body.categoryId;
       const availabilityStatus = req.body.availabilityStatus || 'available';
+      const isBoucheesProduct = req.body.isBoucheesProduct === 'true' || req.body.isBoucheesProduct === true;
 
       // Validate required fields
       if (!name || !priceCents) {
@@ -69,7 +70,8 @@ router.post('/',
         name, 
         description, 
         priceCents, 
-        availabilityStatus 
+        availabilityStatus,
+        isBoucheesProduct
       });
 
       // Handle image upload if provided
@@ -174,6 +176,9 @@ router.put('/:id',
       if (req.body.priceCents) update.priceCents = parseInt(req.body.priceCents, 10);
       if (req.body.categoryId) update.categoryId = req.body.categoryId;
       if (req.body.availabilityStatus) update.availabilityStatus = req.body.availabilityStatus;
+      if (req.body.isBoucheesProduct !== undefined) {
+        update.isBoucheesProduct = req.body.isBoucheesProduct === 'true' || req.body.isBoucheesProduct === true;
+      }
 
       // Find the existing product
       const existingProduct = await Product.findOne({ _id: id, tenantId });

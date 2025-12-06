@@ -17,6 +17,7 @@ export interface ProductDocument {
     format: string;
   };
   availabilityStatus: AvailabilityStatus;
+  isBoucheesProduct: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +37,7 @@ const productSchema = new Schema<ProductDocument>(
       format: { type: String }
     },
     availabilityStatus: { type: String, enum: ['available', 'unavailable', 'archived'], default: 'available' },
+    isBoucheesProduct: { type: Boolean, default: false },
   },
   { timestamps: true, versionKey: false }
 );
