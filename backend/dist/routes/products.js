@@ -32,6 +32,8 @@ router.post('/', authSupabase, resolveTenantStrict, ensureTenantExists, loadMemb
         const priceCents = req.body.priceCents ? parseInt(req.body.priceCents, 10) : undefined;
         const categoryId = req.body.categoryId;
         const availabilityStatus = req.body.availabilityStatus || 'available';
+        const isBoucheesProduct = req.body.isBoucheesProduct === 'true' || req.body.isBoucheesProduct === true;
+        const isRedeemable = req.body.isRedeemable === 'true' || req.body.isRedeemable === true;
         // Validate required fields
         if (!name || !priceCents) {
             return res.status(400).json({
@@ -55,7 +57,9 @@ router.post('/', authSupabase, resolveTenantStrict, ensureTenantExists, loadMemb
             name,
             description,
             priceCents,
-            availabilityStatus
+            availabilityStatus,
+            isBoucheesProduct,
+            isRedeemable
         });
         // Handle image upload if provided
         if (req.file) {
@@ -149,6 +153,12 @@ router.put('/:id', authSupabase, resolveTenantStrict, ensureTenantExists, loadMe
             update.categoryId = req.body.categoryId;
         if (req.body.availabilityStatus)
             update.availabilityStatus = req.body.availabilityStatus;
+        if (req.body.isBoucheesProduct !== undefined) {
+            update.isBoucheesProduct = req.body.isBoucheesProduct === 'true' || req.body.isBoucheesProduct === true;
+        }
+        if (req.body.isRedeemable !== undefined) {
+            update.isRedeemable = req.body.isRedeemable === 'true' || req.body.isRedeemable === true;
+        }
         // Find the existing product
         const existingProduct = await Product.findOne({ _id: id, tenantId });
         if (!existingProduct)

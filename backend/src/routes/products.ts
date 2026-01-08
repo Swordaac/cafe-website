@@ -45,6 +45,7 @@ router.post('/',
       const categoryId = req.body.categoryId;
       const availabilityStatus = req.body.availabilityStatus || 'available';
       const isBoucheesProduct = req.body.isBoucheesProduct === 'true' || req.body.isBoucheesProduct === true;
+      const isRedeemable = req.body.isRedeemable === 'true' || req.body.isRedeemable === true;
 
       // Validate required fields
       if (!name || !priceCents) {
@@ -71,7 +72,8 @@ router.post('/',
         description, 
         priceCents, 
         availabilityStatus,
-        isBoucheesProduct
+        isBoucheesProduct,
+        isRedeemable
       });
 
       // Handle image upload if provided
@@ -178,6 +180,9 @@ router.put('/:id',
       if (req.body.availabilityStatus) update.availabilityStatus = req.body.availabilityStatus;
       if (req.body.isBoucheesProduct !== undefined) {
         update.isBoucheesProduct = req.body.isBoucheesProduct === 'true' || req.body.isBoucheesProduct === true;
+      }
+      if (req.body.isRedeemable !== undefined) {
+        update.isRedeemable = req.body.isRedeemable === 'true' || req.body.isRedeemable === true;
       }
 
       // Find the existing product

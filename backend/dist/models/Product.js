@@ -13,6 +13,8 @@ const productSchema = new Schema({
         format: { type: String }
     },
     availabilityStatus: { type: String, enum: ['available', 'unavailable', 'archived'], default: 'available' },
+    isBoucheesProduct: { type: Boolean, default: false },
+    isRedeemable: { type: Boolean, default: false, index: true },
 }, { timestamps: true, versionKey: false });
 productSchema.index({ tenantId: 1, name: 1 }, { unique: false });
 productSchema.index({ tenantId: 1, categoryId: 1, availabilityStatus: 1 });

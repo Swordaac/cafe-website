@@ -4,6 +4,7 @@ import { env } from '../config/env.js';
 import { StripeEvent } from '../models/StripeEvent.js';
 import { Tenant } from '../models/Tenant.js';
 import { Transaction } from '../models/Transaction.js';
+import { Product } from '../models/Product.js';
 import { incrementLoyaltyPurchase } from './loyalty.js';
 export const router = express.Router();
 // Use raw body for signature verification
@@ -70,12 +71,55 @@ router.post('/webhooks/stripe', express.raw({ type: 'application/json' }), async
                     type: 'payment_intent',
                     metadata: pi.metadata,
                 }, { upsert: true });
-                // Track loyalty purchase if payment succeeded and user is enrolled
+                // Track loyalty purchase if payment succeeded and order contains Bouchees products
                 if (event.type === 'payment_intent.succeeded' && tenantId) {
                     const userId = pi.metadata?.userId;
-                    const isLoyaltyPurchase = pi.metadata?.loyaltyEnrolled === 'true';
-                    if (userId && isLoyaltyPurchase) {
-                        await incrementLoyaltyPurchase(userId, tenantId);
+                    // SECURITY: Recalculate hasBoucheesProducts from stored items instead of trusting metadata
+                    // This prevents manipulation of the metadata field
+                    let hasBoucheesProducts = false;
+                    try {
+                        const itemsJson = pi.metadata?.items;
+                        if (itemsJson) {
+                            const items = JSON.parse(itemsJson);
+                            if (Array.isArray(items) && items.length > 0) {
+                                const productIds = items.map(item => item.productId);
+                                const products = await Product.find({
+                                    _id: { $in: productIds },
+                                    tenantId
+                                }).lean();
+                                hasBoucheesProducts = products.some(p => p.isBoucheesProduct);
+                            }
+                        }
+                    }
+                    catch (error) {
+                        console.error('[Webhook] Error recalculating hasBoucheesProducts:', error);
+                        // Fallback to metadata if recalculation fails (shouldn't happen, but safe fallback)
+                        hasBoucheesProducts = pi.metadata?.hasBoucheesProducts === 'true';
+                    }
+                    console.log('[Webhook] Payment Intent Succeeded:', {
+                        paymentIntentId: pi.id,
+                        tenantId,
+                        userId,
+                        hasBoucheesProducts,
+                        allMetadata: pi.metadata,
+                    });
+                    // Increment loyalty if order contains Bouchees products (regardless of enrollment status)
+                    if (userId && hasBoucheesProducts) {
+                        console.log('[Webhook] Attempting to increment loyalty purchase for:', { userId, tenantId });
+                        try {
+                            await incrementLoyaltyPurchase(userId, tenantId);
+                            console.log('[Webhook] Successfully incremented loyalty purchase');
+                        }
+                        catch (error) {
+                            console.error('[Webhook] Error incrementing loyalty purchase:', error);
+                        }
+                    }
+                    else {
+                        console.log('[Webhook] Skipping loyalty increment:', {
+                            reason: !userId ? 'No userId in metadata' : !hasBoucheesProducts ? 'Order does not contain Bouchees products' : 'unknown',
+                            userId: userId || 'missing',
+                            hasBoucheesProducts: hasBoucheesProducts || 'missing',
+                        });
                     }
                 }
                 break;

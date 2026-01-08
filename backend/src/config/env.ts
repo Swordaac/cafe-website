@@ -32,6 +32,9 @@ export const env = {
     applicationFeeBps: Number(getEnv('STRIPE_APP_FEE_BPS', '1000')), // default 10%
     defaultCurrency: getEnv('STRIPE_DEFAULT_CURRENCY', 'usd'),
   },
+  loyalty: {
+    firstTimeCustomerDiscountPercent: Number(getEnv('FIRST_TIME_CUSTOMER_DISCOUNT_PERCENT', '10')), // default 10%
+  },
   cloudinary: {
     cloudName: getEnv('CLOUDINARY_CLOUD_NAME', ''),
     apiKey: getEnv('CLOUDINARY_API_KEY', ''),

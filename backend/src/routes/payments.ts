@@ -72,6 +72,7 @@ router.post('/payments/intent', resolveTenant, auditLog, tenantRateLimiter, ensu
     const productMap = new Map(products.map(p => [String(p._id), p]));
     let totalAmount = 0;
     const validatedItems = [];
+    const hasBoucheesProducts = products.some(p => p.isBoucheesProduct);
 
     for (const item of items) {
       const product = productMap.get(String(item.productId));
@@ -83,14 +84,16 @@ router.post('/payments/intent', resolveTenant, auditLog, tenantRateLimiter, ensu
         return res.status(400).json({ error: `Product ${product.name} is not available` });
       }
 
-      const itemTotal = product.priceCents * item.quantity;
+      const itemPriceCents = product.priceCents;
+      const itemTotal = itemPriceCents * item.quantity;
       totalAmount += itemTotal;
       
       validatedItems.push({
         productId: item.productId,
         quantity: item.quantity,
-        priceCents: product.priceCents,
-        name: product.name
+        priceCents: itemPriceCents,
+        name: product.name,
+        isBoucheesProduct: product.isBoucheesProduct
       });
     }
 
@@ -110,7 +113,8 @@ router.post('/payments/intent', resolveTenant, auditLog, tenantRateLimiter, ensu
         ...metadata, 
         tenantId,
         items: JSON.stringify(items.map(item => ({ productId: item.productId, quantity: item.quantity }))), // Store only essential item data
-        totalItems: items.length.toString()
+        totalItems: items.length.toString(),
+        hasBoucheesProducts: hasBoucheesProducts.toString(),
       };
       
       console.log('[Payment] Creating payment intent with metadata:', {
@@ -118,6 +122,7 @@ router.post('/payments/intent', resolveTenant, auditLog, tenantRateLimiter, ensu
         metadata: paymentMetadata,
         hasUserId: !!metadata?.userId,
         hasLoyaltyEnrolled: !!metadata?.loyaltyEnrolled,
+        hasBoucheesProducts,
       });
       
       pi = await stripe.paymentIntents.create(

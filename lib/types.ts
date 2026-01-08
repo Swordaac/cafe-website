@@ -14,6 +14,7 @@ export interface Product {
   };
   availabilityStatus: 'available' | 'unavailable' | 'archived';
   isBoucheesProduct: boolean;
+  isRedeemable: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -23,7 +23,8 @@ export function ProductForm({ product, categories, onClose, onSuccess, tenantId,
     priceCents: '',
     categoryId: '',
     availabilityStatus: 'available' as 'available' | 'unavailable' | 'archived',
-    isBoucheesProduct: false
+    isBoucheesProduct: false,
+    isRedeemable: false
   })
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -38,7 +39,8 @@ export function ProductForm({ product, categories, onClose, onSuccess, tenantId,
         priceCents: product.priceCents ? (product.priceCents / 100).toString() : '',
         categoryId: product.categoryId || '',
         availabilityStatus: product.availabilityStatus || 'available',
-        isBoucheesProduct: product.isBoucheesProduct || false
+        isBoucheesProduct: product.isBoucheesProduct || false,
+        isRedeemable: product.isRedeemable || false
       })
       if (product.imageUrl) {
         setImagePreview(product.imageUrl)
@@ -79,6 +81,7 @@ export function ProductForm({ product, categories, onClose, onSuccess, tenantId,
       formDataToSend.append('priceCents', (parseFloat(formData.priceCents) * 100).toString())
       formDataToSend.append('availabilityStatus', formData.availabilityStatus)
       formDataToSend.append('isBoucheesProduct', formData.isBoucheesProduct.toString())
+      formDataToSend.append('isRedeemable', formData.isRedeemable.toString())
       
       if (formData.categoryId) {
         formDataToSend.append('categoryId', formData.categoryId)
@@ -291,6 +294,25 @@ export function ProductForm({ product, categories, onClose, onSuccess, tenantId,
               </label>
               <p className="text-xs text-gray-500 mt-1 ml-6">
                 Check this box to mark this product as a Bouchees product
+              </p>
+            </div>
+
+            {/* Redeemable Product Checkbox */}
+            <div>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="isRedeemable"
+                  checked={formData.isRedeemable}
+                  onChange={handleInputChange}
+                  className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Redeemable Product
+                </span>
+              </label>
+              <p className="text-xs text-gray-500 mt-1 ml-6">
+                Check this box to mark this product as redeemable. Redeemable products are eligible for first-time customer discounts and loyalty point tracking.
               </p>
             </div>
 

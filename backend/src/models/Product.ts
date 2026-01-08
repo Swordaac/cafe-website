@@ -18,6 +18,7 @@ export interface ProductDocument {
   };
   availabilityStatus: AvailabilityStatus;
   isBoucheesProduct: boolean;
+  isRedeemable: boolean; // Whether this product is redeemable (affects loyalty and first-time discounts)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,6 +39,7 @@ const productSchema = new Schema<ProductDocument>(
     },
     availabilityStatus: { type: String, enum: ['available', 'unavailable', 'archived'], default: 'available' },
     isBoucheesProduct: { type: Boolean, default: false },
+    isRedeemable: { type: Boolean, default: false, index: true },
   },
   { timestamps: true, versionKey: false }
 );

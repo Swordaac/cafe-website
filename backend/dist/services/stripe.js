@@ -20,6 +20,21 @@ export async function getDefaultCurrency() {
         return cfg.stripe.defaultCurrency;
     return env.stripe.defaultCurrency;
 }
+/**
+ * Get Stripe account ID for a tenant
+ * In development, returns a hardcoded test account ID
+ * In production, fetches from database or creates a new one
+ */
+export async function getStripeAccountId(tenantId) {
+    // In development, use hardcoded test account ID
+    if (env.nodeEnv === 'development') {
+        const testAccountId = process.env.STRIPE_TEST_ACCOUNT_ID || 'acct_1SFgpED8TJhQz6vX';
+        console.log(`[Stripe] Using test account ID for development: ${testAccountId}`);
+        return testAccountId;
+    }
+    // In production, use the database value
+    return await ensureConnectedAccount(tenantId);
+}
 export async function ensureConnectedAccount(tenantId) {
     if (!stripe)
         throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.');

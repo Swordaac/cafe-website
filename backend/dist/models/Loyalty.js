@@ -5,6 +5,7 @@ const loyaltySchema = new Schema({
     purchaseCount: { type: Number, required: true, default: 0, min: 0 },
     points: { type: Number, required: true, default: 0, min: 0 },
     freeProductEligible: { type: Boolean, required: true, default: false },
+    lastRedemptionPurchaseCount: { type: Number, required: true, default: 0, min: 0 },
     lastPurchaseDate: { type: Date },
     enrolledAt: { type: Date, required: true, default: Date.now },
 }, { timestamps: true, versionKey: false });
