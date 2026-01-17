@@ -119,7 +119,7 @@ export default function Home({ searchParams }: HomeProps) {
             <p className="text-xl md:text-2xl font-medium mb-8 text-white/90 max-w-2xl mx-auto leading-relaxed">
               Fresh flavors, bold tastes, and unforgettable moments
               <br />
-              <span className="text-orange-200">Made for the next generation</span>
+              <span className="text-orange-200">Made for you</span>
             </p>
             
             {/* CTA Buttons */}
@@ -265,31 +265,46 @@ export default function Home({ searchParams }: HomeProps) {
       </section>
 
       {/* Description Section */}
-<section className="py-20 px-6 max-w-4xl mx-auto text-center leading-relaxed">
-  <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-8">
-    Our Story – <span className="text-orange-600">Bouchées</span>
-  </h2>
+      <section className="py-20 px-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div className="text-left leading-relaxed order-1 md:order-1">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-8">
+              Our Story – <span className="text-orange-600">Bouchées</span>
+            </h2>
 
-  <p className="text-lg text-gray-700 mb-6">
-    Every idea starts with a feeling. For Aziz, the founder of Bouchées, that feeling was joy—the simple kind you experience when you share good food with people you love. It began with a small dream: What if a dessert could bring people together? Not just to eat, but to connect, smile, and make memories.
-  </p>
+            <p className="text-lg text-gray-700 mb-6">
+              Every idea starts with a feeling. For Aziz, the founder of Bouchées, that feeling was joy—the simple kind you experience when you share good food with people you love. It began with a small dream: What if a dessert could bring people together? Not just to eat, but to connect, smile, and make memories.
+            </p>
 
-  <p className="text-lg text-gray-700 mb-6">
-    Bouchées does things differently. Our mini pancakes are made with butter, giving them a soft and comforting texture, just like a homemade treat. For Aziz, quality matters. He believes that when food is made with care, people can taste and feel it too.
-  </p>
+            <p className="text-lg text-gray-700 mb-6">
+              Bouchées does things differently. Our mini pancakes are made with butter, giving them a soft and comforting texture, just like a homemade treat. For Aziz, quality matters. He believes that when food is made with care, people can taste and feel it too.
+            </p>
 
-  <p className="text-lg text-gray-700 mb-6">
-    This is our second location, and it exists because people believed in us. They came back not only for the pancakes, but for the experience. They laughed, shared boxes, took photos, brought friends, and spread the word. Bouchées started to grow, not just in size, but in community.
-  </p>
+            <p className="text-lg text-gray-700 mb-6">
+              This is our second location, and it exists because people believed in us. They came back not only for the pancakes, but for the experience. They laughed, shared boxes, took photos, brought friends, and spread the word. Bouchées started to grow, not just in size, but in community.
+            </p>
 
-  <p className="text-xl font-semibold text-orange-600 mb-8">
-    Spread the Joy.
-  </p>
+            <p className="text-xl font-semibold text-orange-600 mb-8">
+              Spread the Joy.
+            </p>
 
-  <p className="text-lg text-gray-800 font-medium">
-    📍 Come visit us at <span className="font-bold">1455 Rue Guy</span>
-  </p>
-</section>
+            <p className="text-lg text-gray-800 font-medium">
+              📍 Come visit us at <span className="font-bold">1455 Rue Guy</span>
+            </p>
+          </div>
+          
+          <div className="order-2 md:order-2">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-500">
+              <img 
+                src="/stories.png" 
+                alt="Our Story - Sharing Joy" 
+                className="w-full h-auto object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Customer Testimonials */}
       <section className="py-20 px-6 bg-white">
