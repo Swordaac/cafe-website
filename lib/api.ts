@@ -68,6 +68,7 @@ export async function customFetch<T = any>(
     method,
     headers: mergedHeaders,
     body: finalBody,
+    cache: 'no-store',
     ...rest,
   });
 
@@ -143,6 +144,7 @@ export async function fetchProducts(tenantId: string, categoryId?: string, searc
         'Content-Type': 'application/json',
         'x-tenant-id': tenantId,
       },
+      cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -210,6 +212,7 @@ export async function fetchCategories(tenantId: string): Promise<Category[]> {
         'Content-Type': 'application/json',
         'x-tenant-id': tenantId,
       },
+      cache: 'no-store',
     });
 
     if (!response.ok) {

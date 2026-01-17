@@ -88,9 +88,9 @@ export default function Home({ searchParams }: HomeProps) {
       {/* <DebugEnv /> */}
       {/* Hero Section */}
       <section
-        className="relative h-[40vh] md:h-[60vh] lg:h-[60vh] flex items-center justify-center text-center text-white overflow-hidden"
+        className="relative h-[40vh] md:h-[80vh] lg:h-[80vh] flex items-center justify-center text-center text-white overflow-hidden"
         style={{
-          backgroundImage: "url('/heroImage.jpg')",
+          backgroundImage: "url('/hero1.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",

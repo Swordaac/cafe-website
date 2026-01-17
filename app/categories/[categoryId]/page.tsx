@@ -13,7 +13,7 @@ async function getCategoryData(categoryId: string) {
     // Always fetch categories first to resolve the effective category ID
     const categoriesRes = await customFetch<{ data: Category[] }>(
       `/tenants/${tenantId}/categories`,
-      { method: 'GET', tenantId }
+      { method: 'GET', tenantId, cache: 'no-store' }
     )
     const categories = categoriesRes.data || []
 
@@ -40,7 +40,7 @@ async function getCategoryData(categoryId: string) {
     // Fetch products using the resolved category ID
     const productsRes = await customFetch<{ data: Product[] }>(
       `/tenants/${tenantId}/products?categoryId=${resolved._id}`,
-      { method: 'GET', tenantId }
+      { method: 'GET', tenantId, cache: 'no-store' }
     )
 
     const products = productsRes.data || []
